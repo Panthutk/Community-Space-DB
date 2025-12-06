@@ -208,3 +208,23 @@ __marimo__/
 
 # Node.js
 node_modules/
+
+
+# OS / editors
+.DS_Store
+*.log
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+env/
+venv/
+*.sqlite3
+
+# Node
+node_modules/
+dist/
+
+# env
+.env
