@@ -77,7 +77,7 @@ class VenueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Venue
         fields = [
-            "id", "name", "description", "venue_type", "location",
+            "id", "name", "owner", "description", "venue_type", "location", "created_at", "updated_at",
             "summary"
         ]
 
