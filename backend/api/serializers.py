@@ -100,7 +100,7 @@ class SpaceSerializer(serializers.ModelSerializer):
             "area_width",
             "area_height",
             "booking_step_minute",
-            "min_booking_minute",
+            "minimum_booking_minute",
             "price_per_hour",
             "cleaning_fee",
             "is_published",
