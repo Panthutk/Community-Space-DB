@@ -6,12 +6,11 @@ admin.site.register(Item)
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    readonly_fields = ("id", "created_at", "updated_at")  # show ID on detail page (read-only)
-    # didn't Show password
+    readonly_fields = ("id", "created_at", "updated_at")
     list_display = (
-        "id", "name", "email", "phone", "is_host", "is_renter", "created_at", "updated_at",
+        "id", "name", "email", "phone", "is_host", "created_at", "updated_at",
     )
-    list_filter = ("is_host", "is_renter", "created_at", "updated_at")
+    list_filter = ("is_host", "created_at", "updated_at")
     search_fields = ("name", "email", "phone")
 
 @admin.register(Location)

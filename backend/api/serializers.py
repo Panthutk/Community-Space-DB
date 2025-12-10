@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Item, User, Location, Venue, Space
 from .utils.calling_codes import CALLING_CODES
-from .utils.phone_utils import format_phone_number
+from .utils.phone_format import format_phone_number, deformat_phone_number
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -10,11 +10,17 @@ class ItemSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class UserSerializer(serializers.ModelSerializer):
-    #DEVNOTE: for the data that we not exact contain inside database as same as user so we need to add more logic
-    #Data get from frontend before merge and format
+    """
+    Handles user input/output transformation,
+    including phone number normalization and country-based formatting.
+    """
+    # Country code from client (used to reconstruct E.164 phone number).
     country = serializers.ChoiceField(choices=list(CALLING_CODES.keys()), write_only=True)
-    phone = serializers.CharField(write_only=True) #NOTE: although we want only digit we still contain in string because the first number can be 0
-    #Formatted data ready to send to backend
+
+    # Raw phone input from client.
+    phone = serializers.CharField(write_only=True)
+
+    # Normalized E.164 phone number returned to the client.
     full_phone = serializers.CharField(source='phone', read_only=True)
 
     class Meta:
@@ -24,41 +30,53 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "password_hash",
             "is_host",
-            "is_renter",
-            # incoming data
+            # incoming data.
             "country",
             "phone",
-            # outgoing data
+            # outgoing data.
             "full_phone",
         ]
 
     def validate(self, data):
+        """
+        Combine raw phone + country input into final phone number format E.164.
+        Applies different logic for create & update operations.
+        """
         instance = getattr(self, 'instance', None)
 
-        # CREATE or updating phone
-        if "phone" in data or instance is None:
+        # Logic when Create the model instance.
+        if instance is None:
             country = data.get("country")
-            raw_phone = data.get("phone")
+            raw = data.get("phone")
 
-            if raw_phone is None or country is None:
-                raise serializers.ValidationError({
-                    "phone": "Both country and phone are required when updating the phone number."
-                })
+            if not country or not raw:
+                raise serializers.ValidationError({"phone": "Country and phone are required."})
 
             try:
-                final_phone = format_phone_number(raw_phone, country)
+                data["phone"] = format_phone_number(raw, country)
             except ValueError as e:
                 raise serializers.ValidationError({"phone": str(e)})
 
-            data["phone"] = final_phone
+            return data
+
+        # Logic when Update the model instance.
+        if "phone" in data or "country" in data:
+            original = deformat_phone_number(instance)
+            country = data.get("country") or original["country"]
+            raw = data.get("phone") or original["phone"]
+
+            try:
+                data["phone"] = format_phone_number(raw, country)
+            except ValueError as e:
+                raise serializers.ValidationError({"phone": str(e)})
 
         return data
 
-
     def create(self, validated_data):
-        # When call create remove "country" data out
+        #Country data only use to build final phone number.
         validated_data.pop("country", None)
         return super().create(validated_data)
+
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:

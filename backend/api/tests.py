@@ -16,7 +16,6 @@ class UserAPITests(APITestCase):
             "email": "alice@test.com",
             "password_hash": "abcd",
             "is_host": True,
-            "is_renter": False,
             "country": "TH",
             "phone": "0812345678"
         }
@@ -45,7 +44,6 @@ class UserAPITests(APITestCase):
             "email": "bob@test.com",
             "password_hash": "abcd",
             "is_host": False,
-            "is_renter": True,
             "country": "TH",
             "phone": "08-1234"   # invalid input
         }
