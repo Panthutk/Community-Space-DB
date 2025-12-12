@@ -17,13 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from api.views import ItemViewSet, UserViewSet, LocationViewSet, VenueViewSet, SpaceViewSet
+from api.views import UserViewSet, VenueViewSet, SpaceViewSet
 
 
 router = routers.DefaultRouter()
-router.register(r"items", ItemViewSet, basename="item")
 router.register(r"users", UserViewSet, basename="user")
-router.register(r"locations", LocationViewSet, basename="location")
 router.register(r"venues", VenueViewSet, basename="venue")
 router.register(r"spaces", SpaceViewSet, basename="space")
 

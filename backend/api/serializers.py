@@ -1,18 +1,12 @@
 from rest_framework import serializers
-from .models import Item, User, Location, Venue, Space
+from .models import User, Venue, Space
 from .utils.calling_codes import CALLING_CODES
 from .utils.phone_format import format_phone_number, deformat_phone_number
 
 
-class ItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Item
-        fields = "__all__"
-
 class UserSerializer(serializers.ModelSerializer):
     """
-    Handles user input/output transformation,
-    including phone number normalization and country-based formatting.
+    Handles phone number normalization and country-based formatting.
     """
     # Country code from client (used to reconstruct E.164 phone number).
     country = serializers.ChoiceField(choices=list(CALLING_CODES.keys()), write_only=True)
@@ -35,6 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
             "phone",
             # outgoing data.
             "full_phone",
+            "created_at", "updated_at"
         ]
 
     def validate(self, data):
@@ -78,35 +73,45 @@ class UserSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = [
-            "id",
-            "address",
-            "city",
-            "province",
-            "country",
-        ]
-
 class VenueSerializer(serializers.ModelSerializer):
+    """
+    Show summarize information about Venue free space.
+    """
     summary = serializers.SerializerMethodField()
 
     class Meta:
         model = Venue
         fields = [
-            "id", "name", "owner", "description", "venue_type", "location", "created_at", "updated_at",
-            "summary"
+            "id",
+            "name",
+            "owner",
+            "venue_type",
+            "address",
+            "city",
+            "province",
+            "country",
+            "google_map_link",
+            "description",
+            "summary",
+            "created_at", "updated_at"
         ]
 
     def get_summary(self, obj):
-        spaces = obj.spaces.all()
+        """
+        Count how many Space are still open for rent in current Venue.
+        """
+        spaces = obj.spaces
         return {
             "total_spaces": spaces.count(),
             "published_spaces": spaces.filter(is_published=True).count(),
+            "unpublished_spaces": spaces["total_spaces"] - spaces["published_spaces"]
         }
 
+
 class SpaceSerializer(serializers.ModelSerializer):
+    """
+    Enforces venue rules when creating or updating spaces.
+    """
 
     class Meta:
         model = Space
@@ -115,33 +120,37 @@ class SpaceSerializer(serializers.ModelSerializer):
             "venue",
             "name",
             "description",
-            "area_width",
-            "area_height",
+            "space_width",
+            "space_height",
             "booking_step_minute",
             "minimum_booking_minute",
             "price_per_hour",
             "cleaning_fee",
             "is_published",
+            "amenities_enabled",
             "created_at",
-            "updated_at"
+            "updated_at",
         ]
 
-    #Check how many space in the venue before create new one
     def validate(self, data):
-        venue = data.get("venue")
-        # CASE 1: Creating a new space
-        if self.instance is None:
-            if venue.venue_type == "WHOLE":
-                # Count how many space in the venue
-                existing_spaces = venue.spaces.count()
-                if existing_spaces >= 1:
-                    raise serializers.ValidationError({"venue": "This venue only allow one space."})
-        # CASE 2: Update Existing space
-        else:
-            new_venue = data.get("venue", self.instance.venue)
-            if new_venue.venue_type == "WHOLE":
-                existing_spaces = new_venue.spaces.exclude(id=self.instance.id).count()
-                if existing_spaces >= 1:
-                    raise serializers.ValidationError({"venue": "This venue only allow one space."})
+        """
+        Ensures WHOLE-type venues do not contain more than one space.
+        """
+        venue = data.get("venue", getattr(self.instance, "venue", None))
+
+        # Return early.
+        if venue is None:
+            return data
+
+        if venue.venue_type == "WHOLE":
+            qs = venue.spaces
+            # If Space already exist in the Venue (When update).
+            if self.instance:
+                qs = qs.exclude(id=self.instance.id)
+
+            if qs.exists():
+                raise serializers.ValidationError({
+                    "venue": "This venue allows only one space."
+                })
 
         return data
