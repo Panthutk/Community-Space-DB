@@ -28,11 +28,9 @@ class User(BaseModel):
     email = models.EmailField(unique=True)
 
     # Phone number stored in normalized E.164 format.
-    phone = models.CharField(unique=True, max_length=25,
-                             validators=[format_rule])
+    phone = models.CharField(unique=True, max_length=25,validators=[format_rule])
 
     # Stores the hashed password.
-    # TODO: Not implement hashed password translate yet, currently directly contain raw password is contain.
     password_hash = models.CharField(max_length=255)
 
     # If true user can create and manage venues.
@@ -84,26 +82,23 @@ class Space(BaseModel):
     """
 
     # || ForeignKey ||
-    venue = models.ForeignKey(
-        Venue, on_delete=models.CASCADE, related_name="spaces")
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="spaces")
 
     # EXAMPLE: Boot A1, A2.
     name = models.CharField(max_length=255, blank=True)
 
-    space_width = models.FloatField(default=5)
-    space_height = models.FloatField(default=5)
-
-    # Data about time.
-    booking_step_minute = models.PositiveIntegerField(default=30)
-    minimum_booking_minute = models.PositiveIntegerField(default=60)
+    space_width = models.DecimalField(default=Decimal("5.00"), max_digits=10, decimal_places=2,
+                                      validators=[MinValueValidator(Decimal("0.01"))])
+    space_height = models.DecimalField(default=Decimal("5.00"), max_digits=10, decimal_places=2,
+                                       validators=[MinValueValidator(Decimal("0.01"))])
 
     # Data about money.
-    price_per_hour = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"),
+    price_per_day = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"),
                                          validators=[MinValueValidator(Decimal("0.00"))])
     cleaning_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
                                        validators=[MinValueValidator(Decimal("0.00"))])
 
-    # If True other Renter can't rent.
+    # Host open this Space or not (doesn't tell about do other people rent or not)
     is_published = models.BooleanField(default=False)
 
     # If False Host can't add amenity.
