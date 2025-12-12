@@ -19,7 +19,6 @@ from django.urls import path, include
 from rest_framework import routers
 from api.views import UserViewSet, VenueViewSet, SpaceViewSet
 
-
 router = routers.DefaultRouter()
 router.register(r"users", UserViewSet, basename="user")
 router.register(r"venues", VenueViewSet, basename="venue")
@@ -28,4 +27,5 @@ router.register(r"spaces", SpaceViewSet, basename="space")
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
+    path("api/auth/", include("api.auth_urls")),
 ]

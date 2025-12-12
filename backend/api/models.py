@@ -28,7 +28,8 @@ class User(BaseModel):
     email = models.EmailField(unique=True)
 
     # Phone number stored in normalized E.164 format.
-    phone = models.CharField(unique=True, max_length=25, validators=[format_rule])
+    phone = models.CharField(unique=True, max_length=25,
+                             validators=[format_rule])
 
     # Stores the hashed password.
     # TODO: Not implement hashed password translate yet, currently directly contain raw password is contain.
@@ -67,7 +68,8 @@ class Venue(BaseModel):
     country = models.CharField(max_length=100)
 
     # Accept only google map link.
-    google_map_link = models.URLField(max_length=500, validators=[validate_google_maps_url], blank=True)
+    google_map_link = models.URLField(max_length=500, validators=[
+                                      validate_google_maps_url], blank=True)
 
     # Specific location internal information like located on the floor 3, section A.
     description = models.TextField(blank=True)
@@ -82,7 +84,8 @@ class Space(BaseModel):
     """
 
     # || ForeignKey ||
-    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="spaces")
+    venue = models.ForeignKey(
+        Venue, on_delete=models.CASCADE, related_name="spaces")
 
     # EXAMPLE: Boot A1, A2.
     name = models.CharField(max_length=255, blank=True)
@@ -95,10 +98,10 @@ class Space(BaseModel):
     minimum_booking_minute = models.PositiveIntegerField(default=60)
 
     # Data about money.
-    price_per_hour = models.DecimalField( max_digits=10, decimal_places=2, default=Decimal("0.00"),
-                      validators=[MinValueValidator(Decimal("0.00"))])
+    price_per_hour = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"),
+                                         validators=[MinValueValidator(Decimal("0.00"))])
     cleaning_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
-                    validators=[MinValueValidator(Decimal("0.00"))])
+                                       validators=[MinValueValidator(Decimal("0.00"))])
 
     # If True other Renter can't rent.
     is_published = models.BooleanField(default=False)

@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from .models import User, Venue, Space
 from .utils.calling_codes import CALLING_CODES
@@ -9,7 +10,8 @@ class UserSerializer(serializers.ModelSerializer):
     Handles phone number normalization and country-based formatting.
     """
     # Country code from client (used to reconstruct E.164 phone number).
-    country = serializers.ChoiceField(choices=list(CALLING_CODES.keys()), write_only=True)
+    country = serializers.ChoiceField(
+        choices=list(CALLING_CODES.keys()), write_only=True)
 
     # Raw phone input from client.
     phone = serializers.CharField(write_only=True)
@@ -45,7 +47,8 @@ class UserSerializer(serializers.ModelSerializer):
             raw = data.get("phone")
 
             if not country or not raw:
-                raise serializers.ValidationError({"phone": "Country and phone are required."})
+                raise serializers.ValidationError(
+                    {"phone": "Country and phone are required."})
 
             try:
                 data["phone"] = format_phone_number(raw, country)
@@ -68,7 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        #Country data only use to build final phone number.
+        # Country data only use to build final phone number.
         validated_data.pop("country", None)
         return super().create(validated_data)
 
@@ -154,3 +157,18 @@ class SpaceSerializer(serializers.ModelSerializer):
                 })
 
         return data
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ["name", "email", "phone", "country", "password", "is_host"]
+
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        if password is None:
+            raise serializers.ValidationError({"password": "Required."})
+        validated_data["password_hash"] = make_password(password)
+        return super().create(validated_data)
