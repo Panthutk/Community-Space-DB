@@ -101,7 +101,7 @@ class VenueSerializer(serializers.ModelSerializer):
 
     def get_summary(self, obj):
         """
-        Count how many Space are still open for rent in current Venue.
+        Count how many Space Host are open.
         """
         spaces = obj.spaces
         return {
@@ -125,9 +125,7 @@ class SpaceSerializer(serializers.ModelSerializer):
             "description",
             "space_width",
             "space_height",
-            "booking_step_minute",
-            "minimum_booking_minute",
-            "price_per_hour",
+            "price_per_day",
             "cleaning_fee",
             "is_published",
             "amenities_enabled",
