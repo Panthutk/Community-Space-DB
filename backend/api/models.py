@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 from .utils.phone_format import format_rule
 from .utils.check_map_url import validate_google_maps_url
@@ -114,3 +114,144 @@ class Space(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({self.venue.name})"
+    
+
+class Amenity(BaseModel):
+    """
+    Generic amenity that can be attached to one or more spaces.
+    Example: Wi-Fi, Parking, Projector.
+    """
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class SpaceAmenity(BaseModel):
+    """
+    Join model between Space and Amenity, with optional `amount`.
+    Mirrors `space_amenities` table in DBML.
+    """
+    space = models.ForeignKey(
+        Space,
+        on_delete=models.CASCADE,
+        related_name="space_amenities",
+    )
+    amenity = models.ForeignKey(
+        Amenity,
+        on_delete=models.CASCADE,
+        related_name="space_amenities",
+    )
+    amount = models.PositiveIntegerField(
+        default=1,
+        help_text="Quantity of this amenity in the space (e.g., 2 projectors).",
+    )
+
+    class Meta:
+        unique_together = ("space", "amenity")
+
+    def __str__(self):
+        return f"{self.amenity.name} x{self.amount} @ {self.space.name}"
+
+
+class Booking(BaseModel):
+    """
+    Booking made by a renter for a specific space and time range.
+    """
+    STATUS_CHOICES = [
+        ("PENDING", "Pending"),
+        ("ACCEPTED", "Accepted"),
+        ("REJECTED", "Rejected"),
+        ("CANCELLED", "Cancelled"),
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ("UNPAID", "Unpaid"),
+        ("PAID", "Paid"),
+    ]
+
+    space = models.ForeignKey(
+        Space,
+        on_delete=models.CASCADE,
+        related_name="bookings",
+    )
+    renter = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="bookings",
+    )
+
+    start_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField()
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING",
+    )
+
+    total_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+
+    # Keep currency simple for now; matches DBML `default 'THB'`
+    currency = models.CharField(
+        max_length=10,
+        default="THB",
+    )
+
+    payment_status = models.CharField(
+        max_length=30,
+        choices=PAYMENT_STATUS_CHOICES,
+        default="UNPAID",
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["space", "start_datetime", "end_datetime"]),
+            models.Index(fields=["renter"]),
+        ]
+
+    def __str__(self):
+        return f"Booking #{self.id} - {self.space.name} by {self.renter.name}"
+
+
+class Review(BaseModel):
+    """
+    Review left by a renter about a venue, based on a booking.
+    """
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name="review",
+    )
+    venue = models.ForeignKey(
+        Venue,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+    )
+    reviewer = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+    )
+
+    rating = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5),
+        ],
+        help_text="Rating from 1 to 5.",
+    )
+    comment = models.TextField(blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["venue"]),
+            models.Index(fields=["reviewer"]),
+        ]
+
+    def __str__(self):
+        return f"Review {self.rating}/5 for {self.venue.name} by {self.reviewer.name}"
