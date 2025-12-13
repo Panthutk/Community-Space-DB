@@ -26,9 +26,14 @@ router.register(r"spaces", SpaceViewSet, basename="space")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include(router.urls)),
+
+    # custom endpoints
+    path("api/venues/create-with-spaces/", create_venue_with_spaces),
+    path("api/amenities/", amenity_list),
+
+    # auth
     path("api/auth/", include("api.auth_urls")),
-    path("venues/create-with-spaces/", create_venue_with_spaces),
-    path("amenities/", amenity_list),
-    
+
+    # router
+    path("api/", include(router.urls)),
 ]

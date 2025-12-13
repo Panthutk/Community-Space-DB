@@ -34,11 +34,10 @@ class VenueAdmin(admin.ModelAdmin):
     readonly_fields = ("id", "created_at", "updated_at")
     list_display = (
         "id", "name", "owner", "venue_type",
-        "city", "province", "country",
         "created_at", "updated_at",
     )
-    list_filter = ("venue_type", "city", "province", "country", "created_at")
-    search_fields = ("name", "owner__name", "address", "city", "province", "country", "description")
+    list_filter = ("venue_type", "city", "created_at")
+    search_fields = ("name", "owner__name", "address", "description")
     ordering = ("-created_at",)
     inlines = [SpaceInline]
 
