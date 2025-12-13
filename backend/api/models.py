@@ -47,7 +47,7 @@ class Venue(BaseModel):
     """
     VENUE_TYPES = [
         ("WHOLE", "Whole Area"),
-        ("GRID", "Grid-based"),
+        ("SPACE", "Space-based"),
     ]
 
     # What User will see when listing. EXAMPLE: Building Name.
@@ -104,7 +104,7 @@ class Space(BaseModel):
     # If False Host can't add amenity.
     amenities_enabled = models.BooleanField(default=False)
 
-    # Specific detail for that Space/Grid. EXAMPLE: near toilet.
+    # Specific detail for that Space. EXAMPLE: near toilet.
     description = models.TextField(blank=True)
 
     def __str__(self):

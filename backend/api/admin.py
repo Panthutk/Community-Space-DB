@@ -25,7 +25,7 @@ class UserAdmin(admin.ModelAdmin):
 class SpaceInline(admin.TabularInline):
     model = Space
     extra = 0
-    fields = ("name", "price_per_hour", "is_published")
+    fields = ("name", "price_per_day", "is_published")
     show_change_link = True
 
 
