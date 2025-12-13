@@ -80,16 +80,7 @@ def create_venue_with_spaces(request):
         {"venue_id": venue.id, "space_ids": created_space_ids},
         status=status.HTTP_201_CREATED,
     )
-
-@api_view(["GET"])
-def amenity_list(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = Amenity.objects.all()
-    if q:
-        qs = qs.filter(name__icontains=q)
-    qs = qs.order_by("name")[:10]
-    return Response([a.name for a in qs])
-
+1
 @api_view(["GET"])
 def amenity_list(request):
     q = (request.GET.get("q") or "").strip()
