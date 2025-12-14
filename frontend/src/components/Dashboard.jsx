@@ -47,7 +47,7 @@ export default function Dashboard() {
       >
         <div>
           <h1 style={{ fontSize: 36, marginBottom: 4 }}>Community Space</h1>
-          <p>Welcome, {user?.name || user?.email }</p>
+          <p>Welcome, {user?.name || user?.email}</p>
         </div>
 
         {/* Logout button (top-right) */}
@@ -153,16 +153,7 @@ export default function Dashboard() {
                 Booking
               </button>
 
-              <button
-                style={{
-                  padding: "10px",
-                  background: "#FFD966",
-                  border: "2px solid #000",
-                  borderRadius: 8,
-                }}
-              >
-                Reviewing
-              </button>
+
             </div>
           </div>
         ))}
