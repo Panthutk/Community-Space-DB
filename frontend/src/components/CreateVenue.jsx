@@ -46,7 +46,10 @@ export default function CreateVenue() {
   const [venue, setVenue] = useState({
     name: "",
     description: "",
-    location: "",
+    address: "",
+    city: "",
+    province: "",
+    country: "",
     venue_type: "WHOLE", // WHOLE or GRID
     contact: "",
     spaceGridCount: 1,
@@ -213,9 +216,12 @@ export default function CreateVenue() {
         venue: {
           name: venue.name,
           description: venue.description,
-          location: venue.location,
+          address: venue.address,
+          city: venue.city,
+          province: venue.province,
+          country: venue.country,
           venue_type: venue.venue_type,
-          contact: venue.contact,
+          // contact: venue.contact,
         },
         spaces: spaces.map((s, idx) => ({
           name: s.name || (venue.venue_type === "WHOLE" ? "Entire Venue" : `Space ${idx + 1}`),
@@ -231,10 +237,15 @@ export default function CreateVenue() {
         })),
       };
 
+      const token = localStorage.getItem("token");
+
       const res = await fetch(`${API_BASE}/api/venues/create-with-spaces/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -263,30 +274,50 @@ export default function CreateVenue() {
         <div style={{ display: "grid", gap: 12 }}>
           <label>
             <div>Name</div>
-            <input value={venue.name} onChange={(e) => updateVenue("name", e.target.value)} style={{ width: "100%", padding: 10 }} required />
+            <input value={venue.name} onChange={(e) => updateVenue("name", e.target.value)} style={{ width: "90%", padding: 10 }} required />
           </label>
 
           <label>
-            <div>Description</div>
-            <textarea value={venue.description} onChange={(e) => updateVenue("description", e.target.value)} style={{ width: "100%", padding: 10, minHeight: 80 }} />
+            <div>Description <span>(Optional)</span></div>
+            <textarea value={venue.description} onChange={(e) => updateVenue("description", e.target.value)} style={{ width: "90%", padding: 10, minHeight: 80 }} />
           </label>
 
           <label>
             <div>Location</div>
-            <input value={venue.location} onChange={(e) => updateVenue("location", e.target.value)} style={{ width: "100%", padding: 10 }} />
+                <div style={{ fontSize: 13}}>Address</div>
+                <input value={venue.address} onChange={(e) => updateVenue("address", e.target.value)} style={{ width: "90%", padding: 10 }} />
+                <div style={{ padding: '0 0 15px 0', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10}}>
+                    <div>
+                        <div style={{ fontSize: 13}}>City</div>
+                        <input value={venue.city} onChange={(e) => updateVenue("city", e.target.value)} style={{ width: "90%", padding: 10 }} />
+                    </div>
+
+                    <div>
+                        <div style={{ fontSize: 13}}>Province</div>
+                        <input value={venue.province} onChange={(e) => updateVenue("province", e.target.value)} style={{ width: "90%", padding: 10 }} />
+                    </div>
+
+                    <div>
+                    <div style={{ fontSize: 13}}>Country</div>
+                    <input value={venue.country} onChange={(e) => updateVenue("country", e.target.value)} style={{ width: "70%", padding: 10 }} />
+                    </div>
+                </div>
+
           </label>
+
+
 
           <label>
             <div>Venue type</div>
             <select value={venue.venue_type} onChange={(e) => updateVenue("venue_type", e.target.value)} style={{ width: 260, padding: 10 }}>
-              <option value="WHOLE">WHOLE (entire space)</option>
-              <option value="GRID">GRID (multiple spaces)</option>
+              <option value="WHOLE">Whole-area (entire space)</option>
+              <option value="GRID">Grid-based (multiple spaces)</option>
             </select>
           </label>
 
           <label>
             <div>Contact</div>
-            <input value={venue.contact} onChange={(e) => updateVenue("contact", e.target.value)} style={{ width: "100%", padding: 10 }} />
+            <input value={venue.contact} onChange={(e) => updateVenue("contact", e.target.value)} style={{ width: "90%", padding: 10 }} />
           </label>
 
           <label>
@@ -326,28 +357,28 @@ export default function CreateVenue() {
                   </label>
 
                   <label>
-                    <div>SpaceDescription</div>
+                      <div>Space Description <span>(Optional)</span></div>
                     <textarea value={s.description} onChange={(e) => updateSpace(idx, { description: e.target.value })} style={{ width: "100%", padding: 10, minHeight: 70 }} />
                   </label>
 
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                     <label>
-                      <div>width</div>
+                      <div>width (km)</div>
                       <input type="number" value={s.space_width} onChange={(e) => updateSpace(idx, { space_width: Number(e.target.value) })} style={{ width: 160, padding: 10 }} />
                     </label>
 
                     <label>
-                      <div>height</div>
+                      <div>height (km)</div>
                       <input type="number" value={s.space_height} onChange={(e) => updateSpace(idx, { space_height: Number(e.target.value) })} style={{ width: 160, padding: 10 }} />
                     </label>
 
                     <label>
-                      <div>price_per_day</div>
+                      <div>price_per_day (USD$)</div>
                       <input type="number" value={s.price_per_day} onChange={(e) => updateSpace(idx, { price_per_day: Number(e.target.value) })} style={{ width: 200, padding: 10 }} />
                     </label>
 
                     <label>
-                      <div>cleaning_fee</div>
+                      <div>cleaning_fee (USD$)</div>
                       <input type="number" value={s.cleaning_fee} onChange={(e) => updateSpace(idx, { cleaning_fee: Number(e.target.value) })} style={{ width: 200, padding: 10 }} />
                     </label>
                   </div>

@@ -1,39 +1,13 @@
 # backend/api/auth_views.py
-import jwt
-from datetime import datetime, timedelta
-from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import User
-from .serializers import UserSerializer
 from rest_framework.permissions import AllowAny
 
-JWT_ALGORITHM = "HS256"
-JWT_LIFETIME_MINUTES = 60  # token lifetime (minutes)
-
-
-def generate_token(user_id):
-    now = datetime.utcnow()
-    payload = {
-        "user_id": user_id,
-        "iat": now,
-        "exp": now + timedelta(minutes=JWT_LIFETIME_MINUTES),
-    }
-    token = jwt.encode(payload, settings.SECRET_KEY, algorithm=JWT_ALGORITHM)
-    return token
-
-
-def decode_token(token):
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY,
-                             algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        return None
-    except jwt.InvalidTokenError:
-        return None
+from .models import User
+from .serializers import UserSerializer
+from .jwt_utils import generate_token, decode_token
 
 
 class RegisterView(APIView):

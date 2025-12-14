@@ -36,6 +36,14 @@ class User(BaseModel):
     # If true user can create and manage venues.
     is_host = models.BooleanField(default=False)
 
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
     def __str__(self):
         return f"{self.name} "
 
@@ -47,7 +55,7 @@ class Venue(BaseModel):
     """
     VENUE_TYPES = [
         ("WHOLE", "Whole Area"),
-        ("SPACE", "Space-based"),
+        ("GRID", "Grid-based"),
     ]
 
     # What User will see when listing. EXAMPLE: Building Name.
@@ -61,8 +69,8 @@ class Venue(BaseModel):
 
     # Address isn't Unique, 2 Venues can be in the same building.
     address = models.CharField(max_length=255)
-    city = models.CharField(max_length=100, blank=True)
-    province = models.CharField(max_length=100, blank=True)
+    city = models.CharField(max_length=100)
+    province = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
 
     # Accept only google map link.

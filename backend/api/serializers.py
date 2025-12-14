@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import User, Venue, Space
 from .utils.calling_codes import CALLING_CODES
 from .utils.phone_format import format_phone_number, deformat_phone_number
+from django.db import transaction
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -75,12 +76,12 @@ class UserSerializer(serializers.ModelSerializer):
         validated_data.pop("country", None)
         return super().create(validated_data)
 
-
 class VenueSerializer(serializers.ModelSerializer):
     """
     Show summarize information about Venue free space.
     """
     summary = serializers.SerializerMethodField()
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Venue
@@ -100,19 +101,22 @@ class VenueSerializer(serializers.ModelSerializer):
         ]
 
     def get_summary(self, obj):
-        total = obj.spaces.count()
-        published = obj.spaces.filter(is_published=True).count()
+        """Count How many spaces host published for the Renter."""
+        spaces = obj.spaces.all()
+        published = spaces.filter(is_published=True).count()
+        total = spaces.count()
+
         return {
             "total_spaces": total,
             "published_spaces": published,
             "unpublished_spaces": total - published
         }
 
-
 class SpaceSerializer(serializers.ModelSerializer):
     """
     Enforces venue rules when creating or updating spaces.
     """
+    venue = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Space
@@ -168,3 +172,53 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Required."})
         validated_data["password_hash"] = make_password(password)
         return super().create(validated_data)
+
+
+class VenueWithSpacesSerializer(serializers.Serializer):
+    venue = VenueSerializer()
+    spaces = serializers.ListField()
+
+    def create(self, validated_data):
+        request = self.context["request"]
+
+        if not request.user.is_host:
+            raise PermissionDenied("Only hosts can create venues.")
+
+        venue_data = validated_data["venue"]
+        raw_spaces = self.initial_data.get("spaces", [])
+
+        with transaction.atomic():
+            venue = Venue.objects.create(
+                owner=request.user,
+                **venue_data
+            )
+
+            created_spaces = []
+
+            for raw in raw_spaces:
+                have_amenity = raw.pop("have_amenity", False)
+                amenities = raw.pop("amenities", [])
+
+                space_serializer = SpaceSerializer(data=raw)
+                space_serializer.is_valid(raise_exception=True)
+
+                space = space_serializer.save(
+                    venue=venue,
+                    amenities_enabled=have_amenity,
+                )
+
+                if have_amenity:
+                    for name in amenities:
+                        amenity, _ = Amenity.objects.get_or_create(name=name)
+                        SpaceAmenity.objects.create(
+                            space=space,
+                            amenity=amenity,
+                            amount=1,
+                        )
+
+                created_spaces.append(space)
+
+        return {
+            "venue": venue,
+            "spaces": created_spaces,
+        }

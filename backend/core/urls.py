@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from api.views import UserViewSet, VenueViewSet, SpaceViewSet, create_venue_with_spaces, amenity_list
+from api.views import UserViewSet, VenueViewSet, SpaceViewSet, amenity_list
 
 router = routers.DefaultRouter()
 router.register(r"users", UserViewSet, basename="user")
@@ -28,7 +28,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     # custom endpoints
-    path("api/venues/create-with-spaces/", create_venue_with_spaces),
     path("api/amenities/", amenity_list),
 
     # auth
