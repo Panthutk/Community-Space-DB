@@ -11,8 +11,7 @@ const COPY_FIELDS = [
   "cleaning_fee",
   "is_published",
   "have_amenity",
-  "amenities", // ✅ copy list too
-];
+  "amenities",
 
 const makeEmptySpace = () => ({
   name: "",
@@ -25,7 +24,7 @@ const makeEmptySpace = () => ({
 
   have_amenity: false,
   amenity_input: "",   // UI-only
-  amenities: [],       // ✅ multi amenities
+  amenities: [],
 });
 
 function uniqAmenities(arr) {
@@ -125,7 +124,7 @@ export default function CreateVenue() {
       return next;
     });
 
-    setMessage("✅ Defaults applied to all spaces.");
+    setMessage(" Defaults applied to all spaces.");
     setTimeout(() => setMessage(""), 1500);
   }
 
@@ -240,18 +239,18 @@ export default function CreateVenue() {
       const token = localStorage.getItem("token");
 
       const res = await fetch(`${API_BASE}/api/venues/create-with-spaces/`, {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.detail || JSON.stringify(data) || "Request failed");
 
-      setMessage("✅ Created venue successfully!");
+      setMessage(" Created venue successfully!");
 
       // small delay so user sees success message (optional)
       setTimeout(() => {
@@ -259,7 +258,7 @@ export default function CreateVenue() {
       }, 800);
 
     } catch (err) {
-      setMessage(`❌ ${err.message}`);
+      setMessage(` ${err.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -284,24 +283,24 @@ export default function CreateVenue() {
 
           <label>
             <div>Location</div>
-                <div style={{ fontSize: 13}}>Address</div>
-                <input value={venue.address} onChange={(e) => updateVenue("address", e.target.value)} style={{ width: "90%", padding: 10 }} />
-                <div style={{ padding: '0 0 15px 0', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10}}>
-                    <div>
-                        <div style={{ fontSize: 13}}>City</div>
-                        <input value={venue.city} onChange={(e) => updateVenue("city", e.target.value)} style={{ width: "90%", padding: 10 }} />
-                    </div>
+            <div style={{ fontSize: 13 }}>Address</div>
+            <input value={venue.address} onChange={(e) => updateVenue("address", e.target.value)} style={{ width: "90%", padding: 10 }} />
+            <div style={{ padding: '0 0 15px 0', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 13 }}>City</div>
+                <input value={venue.city} onChange={(e) => updateVenue("city", e.target.value)} style={{ width: "90%", padding: 10 }} />
+              </div>
 
-                    <div>
-                        <div style={{ fontSize: 13}}>Province</div>
-                        <input value={venue.province} onChange={(e) => updateVenue("province", e.target.value)} style={{ width: "90%", padding: 10 }} />
-                    </div>
+              <div>
+                <div style={{ fontSize: 13 }}>Province</div>
+                <input value={venue.province} onChange={(e) => updateVenue("province", e.target.value)} style={{ width: "90%", padding: 10 }} />
+              </div>
 
-                    <div>
-                    <div style={{ fontSize: 13}}>Country</div>
-                    <input value={venue.country} onChange={(e) => updateVenue("country", e.target.value)} style={{ width: "70%", padding: 10 }} />
-                    </div>
-                </div>
+              <div>
+                <div style={{ fontSize: 13 }}>Country</div>
+                <input value={venue.country} onChange={(e) => updateVenue("country", e.target.value)} style={{ width: "70%", padding: 10 }} />
+              </div>
+            </div>
 
           </label>
 
@@ -357,7 +356,7 @@ export default function CreateVenue() {
                   </label>
 
                   <label>
-                      <div>Space Description <span>(Optional)</span></div>
+                    <div>Space Description <span>(Optional)</span></div>
                     <textarea value={s.description} onChange={(e) => updateSpace(idx, { description: e.target.value })} style={{ width: "100%", padding: 10, minHeight: 70 }} />
                   </label>
 
