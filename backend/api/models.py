@@ -57,6 +57,14 @@ class Venue(BaseModel):
 
     description = models.TextField(blank=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "owner"],
+                name="unique_venue_name_per_owner"
+            )
+        ]
+
     def __str__(self):
         return f"Venue: {self.name} (Owner: {self.owner.name})"
 
