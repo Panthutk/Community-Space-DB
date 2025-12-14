@@ -1,6 +1,6 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from .models import User, Venue, Space
+from .models import User, Venue, Space, Amenity, SpaceAmenity
 from .utils.calling_codes import CALLING_CODES
 from .utils.phone_format import format_phone_number, deformat_phone_number
 from django.db import transaction
