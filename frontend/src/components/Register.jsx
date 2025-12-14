@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -9,6 +9,8 @@ export default function Register() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+
+    const [countryOption, setCountryOption] = useState({});
     const [country, setCountry] = useState("TH");
     const [password, setPassword] = useState("");
     const [msg, setMsg] = useState("");
@@ -37,6 +39,14 @@ export default function Register() {
         }
     }
 
+    useEffect(() => {
+        fetch(`${API_BASE}/api/calling-codes/`)
+            .then(res => res.json())
+            .then(data => setCountryOption(data))
+            .catch(console.error);
+    }, []);
+
+
     return (
         <div style={{ border: "3px solid #000", borderRadius: 8, padding: 32, background: "#fff" }}>
             <form onSubmit={submit}>
@@ -44,7 +54,19 @@ export default function Register() {
 
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" style={inp} />
                 <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={inp} />
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" style={inp} />
+                <div style={{display: 'grid', gridTemplateColumns: '90px 1fr', gap: 8, }}>
+                    <select value={country} onChange={e => setCountry(e.target.value)}
+                        style={{ height: 45, fontSize: 13, margin: '2px 0 0 0', border: "2px solid #000", borderRadius: 8}}>
+                        {Object.entries(countryOption).map(([key, value]) => (
+                            <option key={key} value={key}>
+                                {key} ({value.code})
+                            </option>
+                        ))}
+                    </select>
+
+                    <input value={phone} onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Phone" style={{ ...inp, width: '100%' }}/>
+                </div>
                 <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" style={inp} />
 
                 <div style={{ display: "flex", justifyContent: "space-between" }}>

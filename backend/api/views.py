@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from api.utils.calling_codes import CALLING_CODES
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -166,3 +167,7 @@ def amenity_list(request):
         qs = qs.filter(name__icontains=q)
     qs = qs.order_by("name")[:10]
     return Response([a.name for a in qs])
+
+@api_view(["GET"])
+def calling_codes(request):
+    return Response(CALLING_CODES)
