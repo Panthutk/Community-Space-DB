@@ -2,7 +2,6 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 from .utils.phone_format import format_rule
-from .utils.check_map_url import validate_google_maps_url
 
 
 class BaseModel(models.Model):
@@ -56,10 +55,15 @@ class Venue(BaseModel):
     province = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
 
-    google_map_link = models.URLField(max_length=500, validators=[
-                                      validate_google_maps_url], blank=True)
-
     description = models.TextField(blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "owner"],
+                name="unique_venue_name_per_owner"
+            )
+        ]
 
     def __str__(self):
         return f"Venue: {self.name} (Owner: {self.owner.name})"

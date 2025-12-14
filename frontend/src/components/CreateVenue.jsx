@@ -12,7 +12,7 @@ const COPY_FIELDS = [
   "is_published",
   "have_amenity",
   "amenities",
-
+];
 const makeEmptySpace = () => ({
   name: "",
   description: "",
@@ -21,7 +21,6 @@ const makeEmptySpace = () => ({
   price_per_day: 0,
   cleaning_fee: 0,
   is_published: true,
-
   have_amenity: false,
   amenity_input: "",   // UI-only
   amenities: [],
@@ -50,7 +49,6 @@ export default function CreateVenue() {
     province: "",
     country: "",
     venue_type: "WHOLE", // WHOLE or GRID
-    contact: "",
     spaceGridCount: 1,
   });
 
@@ -312,11 +310,6 @@ export default function CreateVenue() {
               <option value="WHOLE">Whole-area (entire space)</option>
               <option value="GRID">Grid-based (multiple spaces)</option>
             </select>
-          </label>
-
-          <label>
-            <div>Contact</div>
-            <input value={venue.contact} onChange={(e) => updateVenue("contact", e.target.value)} style={{ width: "90%", padding: 10 }} />
           </label>
 
           <label>
