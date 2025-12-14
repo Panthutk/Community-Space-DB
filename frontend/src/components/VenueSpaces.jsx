@@ -59,7 +59,7 @@ export default function VenueSpaces() {
                         </p>
 
                         <p>
-                            <b>Price/day:</b> ฿{s.price_per_day}
+                            <b>Price/day:</b> ${s.price_per_day}
                         </p>
 
                         {!s.is_published && (
