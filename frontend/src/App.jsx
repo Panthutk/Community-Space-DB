@@ -4,7 +4,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import CreateVenue from "./components/CreateVenue";
-
+import VenueSpaces from "./components/VenueSpaces";
 export default function App() {
   return (
     <div>
@@ -18,6 +18,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/venues/create" element={<CreateVenue />} />
+        <Route path="/venues/:venueId/spaces" element={<VenueSpaces />} />
       </Routes>
     </div>
   );

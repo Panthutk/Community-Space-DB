@@ -1,14 +1,16 @@
 from rest_framework import viewsets, status
 from .models import User, Venue, Space, Amenity
-from .serializers import  UserSerializer, VenueSerializer, SpaceSerializer, VenueWithSpacesSerializer
+from .serializers import UserSerializer, VenueSerializer, SpaceSerializer, VenueWithSpacesSerializer
 from django.core.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-created_at')
     serializer_class = UserSerializer
+
 
 class VenueViewSet(viewsets.ModelViewSet):
     """
@@ -36,6 +38,21 @@ class VenueViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    @action(detail=True, methods=["get"], url_path="spaces")
+    def list_spaces(self, request, pk=None):
+        venue = self.get_object()
+
+        spaces = venue.spaces.all().order_by("-created_at")
+        serializer = SpaceSerializer(spaces, many=True)
+
+        return Response(
+            {
+                "venue": VenueSerializer(venue).data,
+                "spaces": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
+
     def perform_create(self, serializer):
         if not self.request.user.is_host:
             raise PermissionDenied("Only hosts account can create new venues.")
@@ -51,6 +68,7 @@ class VenueViewSet(viewsets.ModelViewSet):
         if instance.owner != self.request.user:
             raise PermissionDenied("You can only delete your own venue.")
         instance.delete()
+
 
 class SpaceViewSet(viewsets.ModelViewSet):
     queryset = Space.objects.all().order_by('-created_at')

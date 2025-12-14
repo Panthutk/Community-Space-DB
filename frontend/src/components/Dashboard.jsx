@@ -142,6 +142,7 @@ export default function Dashboard() {
             {/* Actions (UI only) */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <button
+                onClick={() => navigate(`/venues/${v.id}/spaces`)}
                 style={{
                   padding: "10px",
                   background: "#7CFC7C",
@@ -151,6 +152,7 @@ export default function Dashboard() {
               >
                 Booking
               </button>
+
               <button
                 style={{
                   padding: "10px",
