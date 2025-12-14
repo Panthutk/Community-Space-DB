@@ -47,7 +47,7 @@ export default function Dashboard() {
       >
         <div>
           <h1 style={{ fontSize: 36, marginBottom: 4 }}>Community Space</h1>
-          <p>Welcome, {user?.name || user?.email}</p>
+          <p>Welcome, {user?.name || user?.email }</p>
         </div>
 
         {/* Logout button (top-right) */}

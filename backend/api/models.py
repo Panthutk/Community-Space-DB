@@ -33,9 +33,6 @@ class User(BaseModel):
     # Stores the hashed password.
     password_hash = models.CharField(max_length=255)
 
-    # If true user can create and manage venues.
-    is_host = models.BooleanField(default=False)
-
     @property
     def is_authenticated(self):
         return True

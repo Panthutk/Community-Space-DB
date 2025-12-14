@@ -26,7 +26,6 @@ class UserSerializer(serializers.ModelSerializer):
             "name",
             "email",
             "password_hash",
-            "is_host",
             # incoming data.
             "country",
             "phone",
@@ -180,10 +179,6 @@ class VenueWithSpacesSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         request = self.context["request"]
-
-        if not request.user.is_host:
-            raise PermissionDenied("Only hosts can create venues.")
-
         venue_data = validated_data["venue"]
         raw_spaces = self.initial_data.get("spaces", [])
 
