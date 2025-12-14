@@ -34,7 +34,19 @@ export default function VenueSpaces() {
 
     return (
         <div style={{ maxWidth: 1100, margin: "24px auto", padding: 16 }}>
-            <button onClick={() => navigate(-1)}>← Back</button>
+            <button
+                onClick={() => navigate(-1)}
+                style={{
+                    padding: "10px 18px",
+                    border: "2px solid #000",
+                    borderRadius: 8,
+                    background: "#f5f5f5",
+                    cursor: "pointer",
+                }}
+            >
+                ← Back
+            </button>
+
 
             <h1 style={{ fontSize: 32, marginTop: 16 }}>{venue?.name}</h1>
 
