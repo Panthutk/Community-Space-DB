@@ -100,14 +100,12 @@ class VenueSerializer(serializers.ModelSerializer):
         ]
 
     def get_summary(self, obj):
-        """
-        Count how many Space Host are open.
-        """
-        spaces = obj.spaces
+        total = obj.spaces.count()
+        published = obj.spaces.filter(is_published=True).count()
         return {
-            "total_spaces": spaces.count(),
-            "published_spaces": spaces.filter(is_published=True).count(),
-            "unpublished_spaces": spaces["total_spaces"] - spaces["published_spaces"]
+            "total_spaces": total,
+            "published_spaces": published,
+            "unpublished_spaces": total - published
         }
 
 

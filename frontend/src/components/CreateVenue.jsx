@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
@@ -50,6 +51,8 @@ export default function CreateVenue() {
     contact: "",
     spaceGridCount: 1,
   });
+
+  const navigate = useNavigate();
 
   const [spaces, setSpaces] = useState([makeEmptySpace()]);
   const [submitting, setSubmitting] = useState(false);
@@ -238,8 +241,12 @@ export default function CreateVenue() {
       if (!res.ok) throw new Error(data?.detail || JSON.stringify(data) || "Request failed");
 
       setMessage("✅ Created venue successfully!");
-      setSpaces([makeEmptySpace()]);
-      setVenue((v) => ({ ...v, name: "", description: "", location: "", contact: "", spaceGridCount: v.venue_type === "WHOLE" ? 1 : v.spaceGridCount }));
+
+      // small delay so user sees success message (optional)
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 800);
+
     } catch (err) {
       setMessage(`❌ ${err.message}`);
     } finally {
