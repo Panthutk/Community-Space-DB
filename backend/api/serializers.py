@@ -86,7 +86,6 @@ class VenueSerializer(serializers.ModelSerializer):
             "city",
             "province",
             "country",
-            "google_map_link",
             "description",
             "summary",
             "created_at", "updated_at"
@@ -150,7 +149,6 @@ class SpaceSerializer(serializers.ModelSerializer):
 
         return data
 
-
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
 
@@ -164,7 +162,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Required."})
         validated_data["password_hash"] = make_password(password)
         return super().create(validated_data)
-
 
 class VenueWithSpacesSerializer(serializers.Serializer):
     venue = VenueSerializer()
