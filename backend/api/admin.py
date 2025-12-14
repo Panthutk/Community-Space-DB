@@ -46,8 +46,6 @@ class VenueAdmin(admin.ModelAdmin):
 class SpaceAdmin(admin.ModelAdmin):
     readonly_fields = ("id", "created_at", "updated_at")
 
-    # If your model fields are `width`/`height` instead of `space_width`/`space_height`,
-    # change these accordingly.
     list_display = (
         "id", "venue", "name", "space_width", "space_height",
         "price_per_day", "is_published", "amenities_enabled",

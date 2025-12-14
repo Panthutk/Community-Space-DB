@@ -21,16 +21,9 @@ class User(BaseModel):
     """
     Represents a platform user account.
     """
-    # User display name.
     name = models.CharField(max_length=255)
-
-    # This software didn't support log-in by oauth, email only act as User contact information.
     email = models.EmailField(unique=True)
-
-    # Phone number stored in normalized E.164 format.
     phone = models.CharField(unique=True, max_length=25,validators=[format_rule])
-
-    # Stores the hashed password.
     password_hash = models.CharField(max_length=255)
 
     @property
@@ -54,27 +47,18 @@ class Venue(BaseModel):
         ("WHOLE", "Whole Area"),
         ("GRID", "Grid-based"),
     ]
-
-    # What User will see when listing. EXAMPLE: Building Name.
     name = models.CharField(max_length=255)
-
-    # || ForeignKeys ||
-    # When the owner is deleted, all their venues are deleted automatically.
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-
     venue_type = models.CharField(max_length=10, choices=VENUE_TYPES)
 
-    # Address isn't Unique, 2 Venues can be in the same building.
     address = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
     province = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
 
-    # Accept only google map link.
     google_map_link = models.URLField(max_length=500, validators=[
                                       validate_google_maps_url], blank=True)
 
-    # Specific location internal information like located on the floor 3, section A.
     description = models.TextField(blank=True)
 
     def __str__(self):
@@ -86,30 +70,20 @@ class Space(BaseModel):
     Represents a bookable subdivision within a Venue for the Renter.
     """
 
-    # || ForeignKey ||
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="spaces")
-
-    # EXAMPLE: Boot A1, A2.
-    name = models.CharField(max_length=255, blank=True)
-
+    name = models.CharField(max_length=255)
     space_width = models.DecimalField(default=Decimal("5.00"), max_digits=10, decimal_places=2,
                                       validators=[MinValueValidator(Decimal("0.01"))])
     space_height = models.DecimalField(default=Decimal("5.00"), max_digits=10, decimal_places=2,
                                        validators=[MinValueValidator(Decimal("0.01"))])
 
-    # Data about money.
     price_per_day = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"),
                                          validators=[MinValueValidator(Decimal("0.00"))])
-    cleaning_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+    cleaning_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"),
                                        validators=[MinValueValidator(Decimal("0.00"))])
 
-    # Host open this Space or not (doesn't tell about do other people rent or not)
     is_published = models.BooleanField(default=False)
-
-    # If False Host can't add amenity.
     amenities_enabled = models.BooleanField(default=False)
-
-    # Specific detail for that Space. EXAMPLE: near toilet.
     description = models.TextField(blank=True)
 
     def __str__(self):

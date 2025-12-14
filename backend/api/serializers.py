@@ -10,14 +10,10 @@ class UserSerializer(serializers.ModelSerializer):
     """
     Handles phone number normalization and country-based formatting.
     """
-    # Country code from client (used to reconstruct E.164 phone number).
     country = serializers.ChoiceField(
         choices=list(CALLING_CODES.keys()), write_only=True)
-
-    # Raw phone input from client.
     phone = serializers.CharField(write_only=True)
 
-    # Normalized E.164 phone number returned to the client.
     full_phone = serializers.CharField(source='phone', read_only=True)
 
     class Meta:
@@ -41,7 +37,6 @@ class UserSerializer(serializers.ModelSerializer):
         """
         instance = getattr(self, 'instance', None)
 
-        # Logic when Create the model instance.
         if instance is None:
             country = data.get("country")
             raw = data.get("phone")
@@ -57,7 +52,6 @@ class UserSerializer(serializers.ModelSerializer):
 
             return data
 
-        # Logic when Update the model instance.
         if "phone" in data or "country" in data:
             original = deformat_phone_number(instance)
             country = data.get("country") or original["country"]
@@ -71,7 +65,6 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Country data only use to build final phone number.
         validated_data.pop("country", None)
         return super().create(validated_data)
 
