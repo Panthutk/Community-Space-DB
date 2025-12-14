@@ -12,7 +12,7 @@ const COPY_FIELDS = [
   "is_published",
   "have_amenity",
   "amenities",
-
+];
 const makeEmptySpace = () => ({
   name: "",
   description: "",
