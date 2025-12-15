@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 from .utils.phone_format import format_rule
+from django.db.models import Q
 
 
 class BaseModel(models.Model):
@@ -22,7 +23,8 @@ class User(BaseModel):
     """
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
-    phone = models.CharField(unique=True, max_length=25,validators=[format_rule])
+    phone = models.CharField(unique=True, max_length=25,
+                             validators=[format_rule])
     password_hash = models.CharField(max_length=255)
 
     @property
@@ -55,13 +57,16 @@ class Venue(BaseModel):
     province = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
 
+    is_active = models.BooleanField(default=True)
+
     description = models.TextField(blank=True)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=["name", "owner"],
-                name="unique_venue_name_per_owner"
+                condition=Q(is_active=True),
+                name="unique_active_venue_name_per_owner"
             )
         ]
 
@@ -74,7 +79,8 @@ class Space(BaseModel):
     Represents a bookable subdivision within a Venue for the Renter.
     """
 
-    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="spaces")
+    venue = models.ForeignKey(
+        Venue, on_delete=models.CASCADE, related_name="spaces")
     name = models.CharField(max_length=255)
     space_width = models.DecimalField(default=Decimal("5.00"), max_digits=10, decimal_places=2,
                                       validators=[MinValueValidator(Decimal("0.01"))])
@@ -82,7 +88,7 @@ class Space(BaseModel):
                                        validators=[MinValueValidator(Decimal("0.01"))])
 
     price_per_day = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"),
-                                         validators=[MinValueValidator(Decimal("0.00"))])
+                                        validators=[MinValueValidator(Decimal("0.00"))])
     cleaning_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"),
                                        validators=[MinValueValidator(Decimal("0.00"))])
 
@@ -92,7 +98,7 @@ class Space(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({self.venue.name})"
-    
+
 
 class Amenity(BaseModel):
     """

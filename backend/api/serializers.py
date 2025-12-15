@@ -241,8 +241,26 @@ class VenueCreateWithSpacesSerializer(serializers.Serializer):
                 }
 
         except IntegrityError:
+            # Try to revive a soft-deleted venue
+            archived = Venue.objects.filter(
+                owner=request.user,
+                name=venue_data.get("name"),
+                is_active=False,
+            ).first()
+
+            if archived:
+                archived.is_active = True
+                for field, value in venue_data.items():
+                    setattr(archived, field, value)
+                archived.save()
+
+                return {
+                    "venue": archived,
+                    "spaces": [],
+                }
+
             raise serializers.ValidationError(
-                {"venue": "You already have a venue with this name."}
+                {"venue": "You already have an active venue with this name."}
             )
 
 

@@ -36,7 +36,10 @@ class VenueViewSet(viewsets.ModelViewSet):
         - Account that isn't Host unable to create new Venues.
         - Only Account that id = Owner.id is able to their exist Venues.
     """
-    queryset = Venue.objects.all().order_by('-created_at')
+
+    def get_queryset(self):
+        return Venue.objects.filter(is_active=True).order_by("-created_at")
+
     serializer_class = VenueSerializer
 
     @action(detail=False, methods=["post"], url_path="create-with-spaces", permission_classes=[IsAuthenticated],)
@@ -55,6 +58,26 @@ class VenueViewSet(viewsets.ModelViewSet):
                 "space_ids": [s.id for s in result["spaces"]],
             },
             status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=True,
+        methods=["patch"],
+        permission_classes=[IsAuthenticated],
+        url_path="soft-delete",
+    )
+    def soft_delete(self, request, pk=None):
+        venue = self.get_object()
+
+        if venue.owner != request.user:
+            raise PermissionDenied("You can only delete your own venue.")
+
+        venue.is_active = False
+        venue.save()
+
+        return Response(
+            {"message": "Venue archived successfully"},
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=True, methods=["get"], url_path="spaces")
@@ -81,6 +104,12 @@ class VenueViewSet(viewsets.ModelViewSet):
     def update_with_spaces(self, request, pk=None):
         venue = self.get_object()
 
+        if not venue.is_active:
+            return Response(
+                {"detail": "This venue has been archived."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = VenueUpdateWithSpacesSerializer(
             instance=venue,
             data=request.data,
@@ -100,10 +129,10 @@ class VenueViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You can only edit your own venue.")
         serializer.save()
 
-    def perform_destroy(self, instance):
-        if instance.owner != self.request.user:
-            raise PermissionDenied("You can only delete your own venue.")
-        instance.delete()
+    # def perform_destroy(self, instance):
+    #     if instance.owner != self.request.user:
+    #         raise PermissionDenied("You can only delete your own venue.")
+    #     instance.delete()
 
 
 class SpaceViewSet(viewsets.ModelViewSet):

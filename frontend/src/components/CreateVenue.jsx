@@ -325,6 +325,39 @@ export default function CreateVenue() {
       setSubmitting(false);
     }
   }
+  // ---- Soft delete ----
+
+  async function onSoftDelete() {
+    if (!window.confirm("Are you sure you want to delete this venue?\nThis action can be undone by admin.")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${API_BASE}/api/venues/${venueId}/soft-delete/`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.detail || "Failed to delete venue");
+      }
+
+      alert("Venue archived successfully");
+      navigate("/dashboard");
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
 
   return (
     <div style={{ maxWidth: 980, margin: "24px auto", padding: 16 }}>
@@ -555,15 +588,55 @@ export default function CreateVenue() {
 
         {message && <div style={{ marginTop: 14, fontWeight: 700 }}>{message}</div>}
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 18 }}>
-          <button type="button" style={{ padding: "10px 18px" }} onClick={() => window.history.back()} disabled={submitting}>
-            cancel
-          </button>
-          <button type="submit" style={{ padding: "10px 18px", background: "#7CFC7C" }} disabled={submitting}>
-            {submitting ? "Submitting..." : isEdit ? "Update Venue" : "Create Venue"}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            marginTop: 18,
+          }}
+        >
+          {/* LEFT: Delete button (edit mode only) */}
+          {isEdit && (
+            <button
+              type="button"
+              onClick={onSoftDelete}
+              disabled={submitting}
+              style={{
+                padding: "10px 18px",
+                background: "#FF4D4F",
+                color: "#fff",
+                border: "2px solid #000",
+                borderRadius: 8,
+                fontWeight: 700,
+              }}
+            >
+              Delete Venue
+            </button>
+          )}
 
-          </button>
+          {/* RIGHT: Cancel + Submit */}
+          <div style={{ display: "flex", gap: 12 }}>
+            <button
+              type="button"
+              style={{ padding: "10px 18px" }}
+              onClick={() => window.history.back()}
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              style={{ padding: "10px 18px", background: "#7CFC7C" }}
+              disabled={submitting}
+            >
+              {submitting ? "Submitting..." : isEdit ? "Update Venue" : "Create Venue"}
+            </button>
+          </div>
         </div>
+
       </form>
     </div>
   );
