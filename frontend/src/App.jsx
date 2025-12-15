@@ -21,6 +21,8 @@ export default function App() {
         <Route path="/venues/create" element={<CreateVenue />} />
         <Route path="/venues/:venueId/spaces" element={<VenueSpaces />} />
         <Route path="/spaces/:spaceId/book" element={<Booking />} />
+        <Route path="/venues/:venueId/edit" element={<CreateVenue />} />
+
       </Routes>
     </div>
   );

@@ -1,6 +1,15 @@
 from rest_framework import viewsets, status
 from .models import User, Venue, Space, Amenity, Booking
-from .serializers import UserSerializer, VenueSerializer, SpaceSerializer, VenueWithSpacesSerializer, BookingSerializer, UserReadSerializer
+from .serializers import (
+    UserSerializer,
+    UserReadSerializer,
+    VenueSerializer,
+    SpaceSerializer,
+    BookingSerializer,
+    VenueCreateWithSpacesSerializer,
+    VenueUpdateWithSpacesSerializer,
+)
+
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, action
@@ -32,7 +41,8 @@ class VenueViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="create-with-spaces", permission_classes=[IsAuthenticated],)
     def create_with_spaces(self, request):
-        serializer = VenueWithSpacesSerializer(
+
+        serializer = VenueCreateWithSpacesSerializer(
             data=request.data,
             context={"request": request},
         )
@@ -61,6 +71,25 @@ class VenueViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
+
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="update-with-spaces",
+        permission_classes=[IsAuthenticated],
+    )
+    def update_with_spaces(self, request, pk=None):
+        venue = self.get_object()
+
+        serializer = VenueUpdateWithSpacesSerializer(
+            instance=venue,
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({"message": "Venue updated successfully"})
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -108,23 +137,23 @@ class BookingViewSet(viewsets.ViewSet):
     All datetime handling uses Thailand timezone (Asia/Bangkok).
     """
     permission_classes = [IsAuthenticated]
-    
+
     @action(detail=False, methods=["get"], url_path=r"(?P<space_pk>\d+)/reservations")
     def list_reservations(self, request, space_pk=None):
         """
         Returns a list of reserved date ranges (start_date, end_date) for the given space.
         GET /api/bookings/<space_pk>/reservations/
-        
+
         IMPORTANT: Returns dates in YYYY-MM-DD format (Thailand timezone)
         """
         space = get_object_or_404(Space, pk=space_pk)
-        
+
         # Get Bangkok timezone
         bangkok_tz = pytz.timezone('Asia/Bangkok')
-        
+
         bookings = Booking.objects.filter(
             space=space,
-            status__in=["PENDING", "ACCEPTED"], 
+            status__in=["PENDING", "ACCEPTED"],
         ).order_by('start_datetime')
 
         reservations = []
@@ -132,13 +161,14 @@ class BookingViewSet(viewsets.ViewSet):
             # Convert UTC datetime to Bangkok timezone, then extract date
             start_bangkok = b.start_datetime.astimezone(bangkok_tz)
             end_bangkok = b.end_datetime.astimezone(bangkok_tz)
-            
+
             reservations.append({
                 'start': start_bangkok.date().isoformat(),
                 'end': end_bangkok.date().isoformat(),
             })
-        
-        print(f"Returning reservations for space {space_pk}:", reservations)  # Debug log
+
+        # Debug log
+        print(f"Returning reservations for space {space_pk}:", reservations)
         return Response(reservations, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"], url_path=r"(?P<space_pk>\d+)/confirm")
@@ -146,7 +176,7 @@ class BookingViewSet(viewsets.ViewSet):
         """
         Creates a new booking for the specified space.
         POST /api/bookings/<space_pk>/confirm/
-        
+
         Expects: StartDate (YYYY-MM-DD), EndDate (YYYY-MM-DD), totalCost
         All dates are interpreted as Bangkok timezone dates.
         """
@@ -158,21 +188,22 @@ class BookingViewSet(viewsets.ViewSet):
         )
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        
+
         start_date = validated_data["StartDate"]
         end_date = validated_data["EndDate"]
-        
+
         # Get Bangkok timezone
         bangkok_tz = pytz.timezone('Asia/Bangkok')
-        
+
         # Create timezone-aware datetimes in Bangkok timezone
         # Start at 00:00:00 Bangkok time
         start_dt = bangkok_tz.localize(datetime.combine(start_date, time.min))
         # End at 23:59:59 Bangkok time
-        end_dt = bangkok_tz.localize(datetime.combine(end_date, time(23, 59, 59)))
-        
+        end_dt = bangkok_tz.localize(
+            datetime.combine(end_date, time(23, 59, 59)))
+
         print(f"Creating booking: {start_dt} to {end_dt}")  # Debug log
-        
+
         # Django will automatically convert these to UTC for storage
         booking = Booking.objects.create(
             space=space,
@@ -183,7 +214,7 @@ class BookingViewSet(viewsets.ViewSet):
             status="ACCEPTED",
             payment_status="PAID",
         )
-        
+
         return Response(
             {
                 "message": f"Booking confirmed for Space ID {space_pk}.",
@@ -201,6 +232,7 @@ def amenity_list(request):
         qs = qs.filter(name__icontains=q)
     qs = qs.order_by("name")[:10]
     return Response([a.name for a in qs])
+
 
 @api_view(["GET"])
 def calling_codes(request):

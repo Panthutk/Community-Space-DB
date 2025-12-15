@@ -54,9 +54,26 @@ export default function Register() {
 
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" style={inp} />
                 <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={inp} />
-                <div style={{display: 'grid', gridTemplateColumns: '90px 1fr', gap: 8, }}>
-                    <select value={country} onChange={e => setCountry(e.target.value)}
-                        style={{ height: 45, fontSize: 13, margin: '2px 0 0 0', border: "2px solid #000", borderRadius: 8}}>
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "90px 1fr",
+                        gap: 8,
+                        alignItems: "center",
+                    }}
+                >
+
+                    <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        style={{
+                            height: 45,
+                            fontSize: 13,
+                            border: "3px solid #000",
+                            borderRadius: 8,
+                            background: "#fff",
+                        }}
+                    >
                         {Object.entries(countryOption).map(([key, value]) => (
                             <option key={key} value={key}>
                                 {key} ({value.code})
@@ -64,8 +81,9 @@ export default function Register() {
                         ))}
                     </select>
 
+
                     <input value={phone} onChange={(e) => setPhone(e.target.value)}
-                        placeholder="Phone" style={{ ...inp, width: '100%' }}/>
+                        placeholder="Phone" style={{ ...inp, width: '100%' }} />
                 </div>
                 <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" style={inp} />
 

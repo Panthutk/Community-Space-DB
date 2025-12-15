@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useMatch } from "react-router-dom";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
@@ -41,6 +41,10 @@ function uniqAmenities(arr) {
 }
 
 export default function CreateVenue() {
+  const matchEdit = useMatch("/venues/:venueId/edit");
+  const venueId = matchEdit?.params?.venueId;
+  const isEdit = Boolean(matchEdit);
+
   const [venue, setVenue] = useState({
     name: "",
     description: "",
@@ -191,6 +195,13 @@ export default function CreateVenue() {
       return next;
     });
   }
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+    }
+  }, []);
+
 
   // close suggestions on click outside
   useEffect(() => {
@@ -200,6 +211,50 @@ export default function CreateVenue() {
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
   }, []);
+
+  useEffect(() => {
+    if (!isEdit) return;
+
+    const token = localStorage.getItem("token");
+
+    fetch(`${API_BASE}/api/venues/${venueId}/spaces/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(res => res.json())
+      .then(data => {
+        const v = data.venue;
+
+        setVenue({
+          name: v.name,
+          description: v.description || "",
+          address: v.address || "",
+          city: v.city || "",
+          province: v.province || "",
+          country: v.country || "",
+          venue_type: v.venue_type,
+          spaceGridCount: data.spaces.length,
+        });
+
+        setSpaces(
+          data.spaces.map(s => ({
+            id: s.id,
+            name: s.name,
+            description: s.description || "",
+            space_width: s.space_width,
+            space_height: s.space_height,
+            price_per_day: s.price_per_day,
+            cleaning_fee: s.cleaning_fee,
+            is_published: s.is_published,
+            have_amenity: s.amenities_enabled,
+            amenities: [],
+            amenity_input: "",
+          }))
+        );
+      });
+  }, [isEdit, venueId]);
+
 
   // ---- Submit ----
 
@@ -221,6 +276,7 @@ export default function CreateVenue() {
           // contact: venue.contact,
         },
         spaces: spaces.map((s, idx) => ({
+          id: s.id,
           name: s.name || (venue.venue_type === "WHOLE" ? "Entire Venue" : `Space ${idx + 1}`),
           description: s.description || "",
           space_width: String(s.space_width),
@@ -236,8 +292,14 @@ export default function CreateVenue() {
 
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`${API_BASE}/api/venues/create-with-spaces/`, {
-        method: "POST",
+      const url = isEdit
+        ? `${API_BASE}/api/venues/${venueId}/update-with-spaces/`
+        : `${API_BASE}/api/venues/create-with-spaces/`;
+
+      const method = isEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -245,10 +307,12 @@ export default function CreateVenue() {
         body: JSON.stringify(payload),
       });
 
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.detail || JSON.stringify(data) || "Request failed");
 
-      setMessage(" Created venue successfully!");
+      setMessage(isEdit ? " Venue updated successfully!" : " Venue created successfully!");
+
 
       // small delay so user sees success message (optional)
       setTimeout(() => {
@@ -264,7 +328,10 @@ export default function CreateVenue() {
 
   return (
     <div style={{ maxWidth: 980, margin: "24px auto", padding: 16 }}>
-      <h1 style={{ fontSize: 40, marginBottom: 16 }}>Create Venue</h1>
+      <h1 style={{ fontSize: 40, marginBottom: 16 }}>
+        {isEdit ? "Edit Venue" : "Create Venue"}
+      </h1>
+
 
       <form onSubmit={onSubmit} style={{ border: "4px solid #111", padding: 20, borderRadius: 16 }}>
         {/* Venue */}
@@ -306,10 +373,25 @@ export default function CreateVenue() {
 
           <label>
             <div>Venue type</div>
-            <select value={venue.venue_type} onChange={(e) => updateVenue("venue_type", e.target.value)} style={{ width: 260, padding: 10 }}>
+            <select
+              value={venue.venue_type}
+              disabled={isEdit}
+              onChange={(e) => updateVenue("venue_type", e.target.value)}
+              style={{
+                width: 260,
+                padding: 10,
+                opacity: isEdit ? 0.6 : 1,
+              }}
+            >
               <option value="WHOLE">Whole-area (entire space)</option>
               <option value="GRID">Grid-based (multiple spaces)</option>
             </select>
+            {isEdit && (
+              <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
+                Venue type cannot be changed after creation
+              </div>
+            )}
+
           </label>
 
           <label>
@@ -478,7 +560,8 @@ export default function CreateVenue() {
             cancel
           </button>
           <button type="submit" style={{ padding: "10px 18px", background: "#7CFC7C" }} disabled={submitting}>
-            {submitting ? "Submitting..." : "confirmation"}
+            {submitting ? "Submitting..." : isEdit ? "Update Venue" : "Create Venue"}
+
           </button>
         </div>
       </form>
