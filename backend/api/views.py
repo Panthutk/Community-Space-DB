@@ -9,16 +9,25 @@ from rest_framework.permissions import IsAuthenticated
 from api.utils.calling_codes import CALLING_CODES
 from datetime import datetime, time, timedelta
 import pytz
+from rest_framework.permissions import BasePermission
 
+class IsSelf(BasePermission):
+    """ Check User Want to CRUD on their own recode or not. """
+    def has_object_permission(self, request, view, obj):
+        return obj.id == request.user.id
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all().order_by('-created_at')
-    serializer_class = UserSerializer
+    queryset = User.objects.all().order_by("-created_at")
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:
             return UserReadSerializer
         return UserSerializer
+
+    def get_permissions(self):
+        if self.action in ["update", "partial_update", "destroy"]:
+            return [IsAuthenticated(), IsSelf()]
+        return []
 
 
 class VenueViewSet(viewsets.ModelViewSet):
