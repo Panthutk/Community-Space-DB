@@ -12,6 +12,7 @@ import pytz
 
 class UserSerializer(serializers.ModelSerializer):
     """
+    Manage CREATE and MODIFY operations.
     Handles phone number normalization and country-based formatting.
     """
     country = serializers.ChoiceField(
@@ -19,6 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(write_only=True)
 
     full_phone = serializers.CharField(source='phone', read_only=True)
+    password_hash = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
@@ -71,6 +73,14 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("country", None)
         return super().create(validated_data)
+
+class UserReadSerializer(serializers.ModelSerializer):
+    """
+    Manage GET operation.
+    """
+    class Meta:
+        model = User
+        fields = ["id", "name", "email", "phone", "created_at"]
 
 class VenueSerializer(serializers.ModelSerializer):
     """

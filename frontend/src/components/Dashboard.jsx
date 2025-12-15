@@ -14,6 +14,8 @@ export default function Dashboard() {
 
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ownerData, setOwnerData] = useState([]);
+
 
   if (!token) {
     navigate("/login");
@@ -40,7 +42,21 @@ export default function Dashboard() {
       });
   }, [token]);
 
-  return (
+    useEffect(() => {
+        fetch(`${API_BASE}/api/users/`)
+            .then(res => res.json())
+            .then(data => {
+                const byId = Object.fromEntries(
+                    data.map(u => [u.id, u])
+                );
+                setOwnerData(byId);
+            });
+    }, [venues]);
+
+  console.log(ownerData);
+
+
+    return (
     <div style={{ maxWidth: 1100, margin: "24px auto", padding: 16 }}>
 
       {/* Header */}
@@ -54,7 +70,7 @@ export default function Dashboard() {
       >
         <div>
           <h1 style={{ fontSize: 36, marginBottom: 4 }}>Community Space</h1>
-          <p>Welcome, {user?.name || user?.email}</p>
+          <p>Welcome, {user?.name || "-"} {"("} {user?.email || "-"} {")"}</p>
         </div>
 
         {/* Logout button (top-right) */}
@@ -67,7 +83,7 @@ export default function Dashboard() {
             padding: "10px 18px",
             border: "2px solid #000",
             borderRadius: 8,
-            background: "#f5f5f5",
+            background: "#D70040",
           }}
         >
           Logout
@@ -84,7 +100,7 @@ export default function Dashboard() {
               borderRadius: 8,
             }}
           >
-            Create Venue
+           + Create Venue
           </button>
         </Link>
       </div>
@@ -122,11 +138,13 @@ export default function Dashboard() {
             {/* Info */}
             <div style={{ flex: 1 }}>
               <h2 style={{ marginBottom: 6 }}>{v.name}</h2>
-              <p style={{ marginBottom: 8 }}>
+              <p style={{ marginBottom: 8, color: "#636363" }}>
                 {v.description || "No description"}
               </p>
 
-              <p><b>Type:</b> {v.venue_type}</p>
+              <p>
+                  <b>Owner:</b> {" "} {ownerData[v.owner]?.name || "-"}
+              </p>
 
               <p>
                 <b>Location:</b>{" "}
@@ -135,15 +153,26 @@ export default function Dashboard() {
                   .join(", ")}
               </p>
 
+              <div style={{ display: "flex", gap: 20 }}>
+                  <span><b>Type:</b> {v.venue_type}</span>
+                  <span><b>Spaces:</b> {v.summary?.published_spaces} / {v.summary?.total_spaces}</span>
+              </div>
+
               <p>
-                <b>Spaces:</b>{" "}
-                {v.summary?.published_spaces} / {v.summary?.total_spaces}
+                  <b>Created:</b>{" "}
+                  {new Date(v.created_at).toLocaleDateString("en-GB")}
               </p>
 
               <p>
-                <b>Created:</b>{" "}
-                {new Date(v.created_at).toLocaleDateString()}
+                <b>Contact:</b>{" "}
+                  <span>
+                    <span style={{ fontWeight: 500 }}>Phone:</span> {ownerData[v.owner]?.phone || "-"}
+                  </span>
+                  <span style={{padding: "0 0 0 15px"}}>
+                    <span style={{ fontWeight: 500 }}>Email:</span> {ownerData[v.owner]?.email || "-"}
+                  </span>
               </p>
+
             </div>
 
             {/* Actions (UI only) */}

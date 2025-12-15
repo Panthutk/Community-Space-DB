@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from .models import User, Venue, Space, Amenity, Booking
-from .serializers import UserSerializer, VenueSerializer, SpaceSerializer, VenueWithSpacesSerializer, BookingSerializer
+from .serializers import UserSerializer, VenueSerializer, SpaceSerializer, VenueWithSpacesSerializer, BookingSerializer, UserReadSerializer
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, action
@@ -14,6 +14,11 @@ import pytz
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-created_at')
     serializer_class = UserSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["list", "retrieve"]:
+            return UserReadSerializer
+        return UserSerializer
 
 
 class VenueViewSet(viewsets.ModelViewSet):
