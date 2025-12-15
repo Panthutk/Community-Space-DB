@@ -24,12 +24,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Check token existence inside the effect to avoid unnecessary fetch if navigating away
-    if (!token) return; 
-    
+    if (!token) return;
+
     fetch(`${API_BASE}/api/venues/`, {
-        headers: {
-            Authorization: `Bearer ${token}`, // Ensure token is sent
-        },
+      headers: {
+        Authorization: `Bearer ${token}`, // Ensure token is sent
+      },
     })
       .then((res) => res.json())
       .then((data) => {
@@ -42,21 +42,21 @@ export default function Dashboard() {
       });
   }, [token]);
 
-    useEffect(() => {
-        fetch(`${API_BASE}/api/users/`)
-            .then(res => res.json())
-            .then(data => {
-                const byId = Object.fromEntries(
-                    data.map(u => [u.id, u])
-                );
-                setOwnerData(byId);
-            });
-    }, [venues]);
+  useEffect(() => {
+    fetch(`${API_BASE}/api/users/`)
+      .then(res => res.json())
+      .then(data => {
+        const byId = Object.fromEntries(
+          data.map(u => [u.id, u])
+        );
+        setOwnerData(byId);
+      });
+  }, [venues]);
 
   console.log(ownerData);
 
 
-    return (
+  return (
     <div style={{ maxWidth: 1100, margin: "24px auto", padding: 16 }}>
 
       {/* Header */}
@@ -100,7 +100,7 @@ export default function Dashboard() {
               borderRadius: 8,
             }}
           >
-           + Create Venue
+            + Create Venue
           </button>
         </Link>
       </div>
@@ -150,27 +150,27 @@ export default function Dashboard() {
               </p>
 
               <div style={{ display: "flex", gap: 20 }}>
-                  <span><b>Type:</b> {v.venue_type}</span>
-                  <span><b>Spaces:</b> {v.summary?.published_spaces} / {v.summary?.total_spaces}</span>
+                <span><b>Type:</b> {v.venue_type}</span>
+                <span><b>Spaces:</b> {v.summary?.published_spaces} / {v.summary?.total_spaces}</span>
               </div>
 
               <p>
-                  <b>Owner:</b> {" "} {ownerData[v.owner]?.name || "-"}
+                <b>Owner:</b> {" "} {ownerData[v.owner]?.name || "-"}
               </p>
 
               <p>
                 <b>Contact:</b>{" "}
-                  <span>
-                    <span style={{ fontWeight: 500 }}>Phone:</span> {ownerData[v.owner]?.phone || "-"}
-                  </span>
-                  <span style={{padding: "0 0 0 15px"}}>
-                    <span style={{ fontWeight: 500 }}>Email:</span> {ownerData[v.owner]?.email || "-"}
-                  </span>
+                <span>
+                  <span style={{ fontWeight: 500 }}>Phone:</span> {ownerData[v.owner]?.phone || "-"}
+                </span>
+                <span style={{ padding: "0 0 0 15px" }}>
+                  <span style={{ fontWeight: 500 }}>Email:</span> {ownerData[v.owner]?.email || "-"}
+                </span>
               </p>
 
               <p>
-                  <b>Created:</b>{" "}
-                  {new Date(v.created_at).toLocaleDateString("en-GB")}
+                <b>Created:</b>{" "}
+                {new Date(v.created_at).toLocaleDateString("en-GB")}
               </p>
 
             </div>
@@ -188,6 +188,21 @@ export default function Dashboard() {
               >
                 Booking
               </button>
+              {user?.email === ownerData[v.owner]?.email && (
+                <button
+                  onClick={() => navigate(`/venues/${v.id}/edit`)}
+                  style={{
+                    padding: "10px",
+                    background: "#FFD966",
+                    border: "2px solid #000",
+                    borderRadius: 8,
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+
+
 
 
             </div>
