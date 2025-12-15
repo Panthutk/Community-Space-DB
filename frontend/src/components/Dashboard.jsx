@@ -16,6 +16,49 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [ownerData, setOwnerData] = useState([]);
 
+  // Helper to render a numeric average rating and corresponding star icons.
+  const renderAvgStars = (avg) => {
+    const rating = avg || 0;
+    const intPart = Math.floor(rating);
+    const hasHalf = rating - intPart >= 0.5;
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (i <= intPart) {
+        stars.push(
+          <span key={i} style={{ color: "#FFD700", fontSize: 16 }}>
+            ★
+          </span>
+        );
+      } else if (hasHalf && i === intPart + 1) {
+        stars.push(
+          <span
+            key={i}
+            style={{
+              background: "linear-gradient(90deg, #FFD700 50%, #D3D3D3 50%)",
+              WebkitBackgroundClip: "text",
+              color: "transparent",
+              fontSize: 16,
+            }}
+          >
+            ★
+          </span>
+        );
+      } else {
+        stars.push(
+          <span key={i} style={{ color: "#D3D3D3", fontSize: 16 }}>
+            ★
+          </span>
+        );
+      }
+    }
+    return (
+      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <span style={{ marginRight: 4 }}>{rating.toFixed(1)}</span>
+        {stars}
+      </span>
+    );
+  };
+
 
   if (!token) {
     navigate("/login");
@@ -173,10 +216,28 @@ export default function Dashboard() {
                 {new Date(v.created_at).toLocaleDateString("en-GB")}
               </p>
 
+              {/* Average rating display */}
+              <div style={{ marginTop: 4 }}>
+                <b>Rating:</b>{" "}
+                {renderAvgStars(v.average_rating)}
+              </div>
+
             </div>
 
             {/* Actions (UI only) */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {/* Review button: navigate to list of reviews for this venue */}
+              <button
+                onClick={() => navigate(`/venues/${v.id}/reviews`)}
+                style={{
+                  padding: "10px",
+                  background: "#ADD8E6",
+                  border: "2px solid #000",
+                  borderRadius: 8,
+                }}
+              >
+                Review
+              </button>
               <button
                 onClick={() => navigate(`/venues/${v.id}/spaces`)}
                 style={{

@@ -90,7 +90,21 @@ class BookingAdmin(admin.ModelAdmin):
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     readonly_fields = ("id", "created_at", "updated_at")
-    list_display = ("id", "venue", "reviewer", "rating", "created_at")
-    list_filter = ("rating", "venue")
-    search_fields = ("venue__name", "reviewer__name", "comment")
+    list_display = ("id", "get_venue", "get_reviewer", "rating", "created_at")
+    list_filter = ("rating",)
+    search_fields = (
+        "comment",
+        "booking__space__venue__name",
+        "booking__renter__name",
+    )
     ordering = ("-created_at",)
+
+    def get_venue(self, obj):
+        return obj.booking.space.venue
+
+    get_venue.short_description = "Venue"
+
+    def get_reviewer(self, obj):
+        return obj.booking.renter
+
+    get_reviewer.short_description = "Reviewer"

@@ -211,17 +211,6 @@ class Review(BaseModel):
         on_delete=models.CASCADE,
         related_name="review",
     )
-    venue = models.ForeignKey(
-        Venue,
-        on_delete=models.CASCADE,
-        related_name="reviews",
-    )
-    reviewer = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="reviews",
-    )
-
     rating = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(1),
@@ -232,10 +221,13 @@ class Review(BaseModel):
     comment = models.TextField(blank=True)
 
     class Meta:
+        # Index the booking field for faster lookups and enforce one review per booking
         indexes = [
-            models.Index(fields=["venue"]),
-            models.Index(fields=["reviewer"]),
+            models.Index(fields=["booking"]),
         ]
 
     def __str__(self):
-        return f"Review {self.rating}/5 for {self.venue.name} by {self.reviewer.name}"
+        # Derive venue and reviewer details from the booking
+        venue = self.booking.space.venue if self.booking else None
+        reviewer = self.booking.renter if self.booking else None
+        return f"Review {self.rating}/5 for {venue.name if venue else '?'} by {reviewer.name if reviewer else '?'}"

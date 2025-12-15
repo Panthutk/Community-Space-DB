@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status
-from .models import User, Venue, Space, Amenity, Booking
+from .models import User, Venue, Space, Amenity, Booking, Review
 from .serializers import (
     UserSerializer,
     UserReadSerializer,
@@ -8,6 +8,7 @@ from .serializers import (
     BookingSerializer,
     VenueCreateWithSpacesSerializer,
     VenueUpdateWithSpacesSerializer,
+    ReviewSerializer
 )
 
 from django.shortcuts import get_object_or_404
@@ -138,12 +139,6 @@ class VenueViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You can only edit your own venue.")
         serializer.save()
 
-    # def perform_destroy(self, instance):
-    #     if instance.owner != self.request.user:
-    #         raise PermissionDenied("You can only delete your own venue.")
-    #     instance.delete()
-
-
 class SpaceViewSet(viewsets.ModelViewSet):
     queryset = Space.objects.all().order_by('-created_at')
     serializer_class = SpaceSerializer
@@ -260,6 +255,78 @@ class BookingViewSet(viewsets.ViewSet):
             },
             status=status.HTTP_201_CREATED,
         )
+    
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for creating and listing reviews.
+
+    Reviews are stored in 3NF: the review itself references only a booking, so
+    the venue and reviewer are inferred via booking.space.venue and
+    booking.renter.  A `venue` query parameter may be supplied to filter
+    reviews by venue id.
+    """
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        qs = Review.objects.all().order_by("-created_at")
+        venue_id = self.request.query_params.get("venue")
+        if venue_id:
+            qs = qs.filter(booking__space__venue_id=venue_id)
+        return qs
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [IsAuthenticated()]
+        return []
+
+    def create(self, request, *args, **kwargs):
+        rating = request.data.get("rating")
+        venue_id = request.data.get("venue")
+        comment = request.data.get("comment", "")
+
+        # Validate rating exists and is an integer between 1 and 5
+        try:
+            rating_int = int(rating)
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Rating must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if rating_int < 1 or rating_int > 5:
+            return Response(
+                {"detail": "Rating must be between 1 and 5."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Ensure the venue exists
+        venue = get_object_or_404(Venue, pk=venue_id)
+
+        # Find a booking for this user and venue without an existing review
+        bookings = Booking.objects.filter(space__venue=venue, renter=request.user)
+        available_booking = None
+        for b in bookings:
+            # OneToOne relation: if review exists, accessing b.review will succeed
+            try:
+                _ = b.review
+            except Review.DoesNotExist:
+                available_booking = b
+                break
+
+        if available_booking is None:
+            return Response(
+                {"detail": "No eligible booking found or review already submitted."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Create the review linked to the booking; reviewer and venue are derived
+        review = Review.objects.create(
+            booking=available_booking,
+            rating=rating_int,
+            comment=comment.strip(),
+        )
+        serializer = self.get_serializer(review)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])

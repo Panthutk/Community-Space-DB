@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Q, Avg
 from rest_framework import serializers
 from datetime import timedelta, datetime
 import pytz
@@ -13,6 +13,7 @@ from .models import (
     Amenity,
     SpaceAmenity,
     Booking,
+    Review,
 )
 from .utils.calling_codes import CALLING_CODES
 from .utils.phone_format import format_phone_number, deformat_phone_number
@@ -85,6 +86,7 @@ class UserReadSerializer(serializers.ModelSerializer):
 class VenueSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     summary = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Venue
@@ -99,6 +101,7 @@ class VenueSerializer(serializers.ModelSerializer):
             "country",
             "description",
             "summary",
+            "average_rating",
             "created_at",
             "updated_at",
         ]
@@ -132,6 +135,15 @@ class VenueSerializer(serializers.ModelSerializer):
             "published_spaces": published,
             "unpublished_spaces": total - published,
         }
+
+    def get_average_rating(self, obj):
+        """Return the average rating for this venue or None if no reviews."""
+        from .models import Review
+        result = Review.objects.filter(
+            booking__space__venue=obj
+        ).aggregate(avg=Avg('rating'))['avg']
+        # Round to one decimal place if not None
+        return round(result, 1) if result is not None else None
 
 
 # =========================================================
@@ -434,3 +446,60 @@ class BookingSerializer(serializers.ModelSerializer):
             )
 
         return data
+
+
+# =========================================================
+# REVIEW
+# =========================================================
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Review model in 3rd normal form.  The reviewer and
+    venue are derived through the associated booking instead of being stored
+    directly on the review itself.  These derived fields are read‑only.
+    """
+    booking = serializers.PrimaryKeyRelatedField(read_only=True)
+    venue = serializers.SerializerMethodField(read_only=True)
+    reviewer = serializers.SerializerMethodField(read_only=True)
+
+    reviewer_name = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Review
+        fields = [
+            "id",
+            "booking",
+            "venue",
+            "reviewer",
+            "reviewer_name",
+            "rating",
+            "comment",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "booking",
+            "venue",
+            "reviewer",
+            "reviewer_name",
+            "created_at",
+        ]
+
+    def get_venue(self, obj):
+        try:
+            return obj.booking.space.venue.id
+        except Exception:
+            return None
+
+    def get_reviewer(self, obj):
+        try:
+            return obj.booking.renter.id
+        except Exception:
+            return None
+
+    def get_reviewer_name(self, obj):
+        """Return the name of the reviewer (renter) derived from the booking."""
+        try:
+            return obj.booking.renter.name
+        except Exception:
+            return None

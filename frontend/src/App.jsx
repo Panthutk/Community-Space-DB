@@ -6,11 +6,13 @@ import Dashboard from "./components/Dashboard";
 import CreateVenue from "./components/CreateVenue";
 import VenueSpaces from "./components/VenueSpaces";
 import Booking from "./components/Booking";
+import Review from "./components/Review";
+import VenueReviews from "./components/VenueReviews";
 export default function App() {
   return (
     <div>
       <header style={{ fontFamily: "Georgia, serif", fontSize: 48, margin: "32px 64px" }}>
-        Community Space
+        Community Space 
       </header>
 
       <Routes>
@@ -22,6 +24,12 @@ export default function App() {
         <Route path="/venues/:venueId/spaces" element={<VenueSpaces />} />
         <Route path="/spaces/:spaceId/book" element={<Booking />} />
         <Route path="/venues/:venueId/edit" element={<CreateVenue />} />
+
+        {/* Review creation page */}
+        <Route path="/venues/:venueId/review" element={<Review />} />
+
+        {/* Reviews listing page */}
+        <Route path="/venues/:venueId/reviews" element={<VenueReviews />} />
 
       </Routes>
     </div>
