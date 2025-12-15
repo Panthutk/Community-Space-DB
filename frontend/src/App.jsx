@@ -1,34 +1,37 @@
-import React, { useEffect, useState } from "react";
-
-const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import Dashboard from "./components/Dashboard";
+import CreateVenue from "./components/CreateVenue";
+import VenueSpaces from "./components/VenueSpaces";
+import Booking from "./components/Booking";
+import Review from "./components/Review";
+import VenueReviews from "./components/VenueReviews";
 export default function App() {
-  const [items, setItems] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    fetch(`${apiBase}/api/items/`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(data => setItems(data))
-      .catch(e => setError(e.message));
-  }, []);
-
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Community Space — Items</h1>
+    <div>
+      <header style={{ fontFamily: "Georgia, serif", fontSize: 48, margin: "32px 64px" }}>
+        Community Space 
+      </header>
 
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/venues/create" element={<CreateVenue />} />
+        <Route path="/venues/:venueId/spaces" element={<VenueSpaces />} />
+        <Route path="/spaces/:spaceId/book" element={<Booking />} />
+        <Route path="/venues/:venueId/edit" element={<CreateVenue />} />
 
-      <ul>
-        {items.map(item => (
-          <li key={item.id}>
-            {item.name} — {item.description}
-          </li>
-        ))}
-      </ul>
+        {/* Review creation page */}
+        <Route path="/venues/:venueId/review" element={<Review />} />
+
+        {/* Reviews listing page */}
+        <Route path="/venues/:venueId/reviews" element={<VenueReviews />} />
+
+      </Routes>
     </div>
   );
 }

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -88,7 +89,12 @@ DATABASES = {
 
 # REST framework (minimal)
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "api.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
 }
 
 # CORS - allow frontend dev
@@ -99,3 +105,10 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 
 # static
 STATIC_URL = "/static/"
+
+# Use SQLite for testing to avoid MySQL permissions issues
+if 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',   # in-memory DB → very fast for tests purpose
+    }

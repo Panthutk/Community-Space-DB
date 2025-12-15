@@ -17,12 +17,25 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from api.views import ItemViewSet
+from api.views import UserViewSet, VenueViewSet, SpaceViewSet, BookingViewSet, ReviewViewSet, amenity_list, calling_codes 
 
 router = routers.DefaultRouter()
-router.register(r"items", ItemViewSet, basename="item")
+router.register(r"users", UserViewSet, basename="user")
+router.register(r"venues", VenueViewSet, basename="venue")
+router.register(r"spaces", SpaceViewSet, basename="space")
+router.register(r"bookings", BookingViewSet, basename="booking") 
+router.register(r"reviews", ReviewViewSet, basename="review")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/calling-codes/", calling_codes),
+
+    # custom endpoints
+    path("api/amenities/", amenity_list),
+
+    # auth
+    path("api/auth/", include("api.auth_urls")),
+
+    # router
     path("api/", include(router.urls)),
 ]
