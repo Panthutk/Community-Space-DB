@@ -103,6 +103,26 @@ class VenueSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate(self, data):
+        required_fields = [
+            "name",
+            "venue_type",
+            "address",
+            "city",
+            "province",
+            "country",
+        ]
+
+        errors = {}
+        for field in required_fields:
+            if not data.get(field):
+                errors[field] = "This field is required."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
+
     def get_summary(self, obj):
         spaces = obj.spaces.all()
         published = spaces.filter(is_published=True).count()
@@ -139,18 +159,42 @@ class SpaceSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        venue = data.get("venue", getattr(self.instance, "venue", None))
-        if not venue:
-            return data
+        errors = {}
 
-        if venue.venue_type == "WHOLE":
+        # ---------- REQUIRED ----------
+        if not data.get("name"):
+            errors["name"] = "Space name is required."
+
+        # ---------- NUMERIC RULES ----------
+        space_width = data.get("space_width")
+        space_height = data.get("space_height")
+        price = data.get("price_per_day")
+        cleaning = data.get("cleaning_fee")
+
+        if space_width is not None and space_width <= 0.01:
+            errors["space_width"] = "Space width must be greater than 0.01."
+
+        if space_height is not None and space_height <= 0.01:
+            errors["space_height"] = "Space height must be greater than 0.01."
+
+        if price is not None and price <= 0:
+            errors["price_per_day"] = "Price per day must be greater than 0.00."
+
+        # cleaning_fee CAN be 0.00
+        if cleaning is not None and cleaning < 0:
+            errors["cleaning_fee"] = "Cleaning fee cannot be negative."
+
+        # ---------- WHOLE VENUE RULE ----------
+        venue = data.get("venue", getattr(self.instance, "venue", None))
+        if venue and venue.venue_type == "WHOLE":
             qs = venue.spaces
             if self.instance:
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
-                raise serializers.ValidationError(
-                    {"venue": "WHOLE venue can only have one space."}
-                )
+                errors["venue"] = "WHOLE venue can only have one space."
+
+        if errors:
+            raise serializers.ValidationError(errors)
 
         return data
 
@@ -206,10 +250,10 @@ class VenueCreateWithSpacesSerializer(serializers.Serializer):
 
         try:
             with transaction.atomic():
-                venue = Venue.objects.create(
-                    owner=request.user,
-                    **venue_data
-                )
+                venue_serializer = VenueSerializer(data=venue_data)
+                venue_serializer.is_valid(raise_exception=True)
+
+                venue = venue_serializer.save(owner=request.user)
 
                 created_spaces = []
 
@@ -217,10 +261,12 @@ class VenueCreateWithSpacesSerializer(serializers.Serializer):
                     have_amenity = raw.pop("have_amenity", False)
                     amenities = raw.pop("amenities", [])
 
-                    space = Space.objects.create(
+                    space_serializer = SpaceSerializer(data=raw)
+                    space_serializer.is_valid(raise_exception=True)
+
+                    space = space_serializer.save(
                         venue=venue,
                         amenities_enabled=have_amenity,
-                        **raw
                     )
 
                     if have_amenity:
@@ -296,15 +342,25 @@ class VenueUpdateWithSpacesSerializer(serializers.Serializer):
 
                 if space_id and space_id in existing_spaces:
                     space = existing_spaces[space_id]
-                    for k, v in raw.items():
-                        setattr(space, k, v)
-                    space.amenities_enabled = have_amenity
-                    space.save()
+
+                    space_serializer = SpaceSerializer(
+                        instance=space,
+                        data=raw,
+                        partial=True
+                    )
+                    space_serializer.is_valid(raise_exception=True)
+
+                    space = space_serializer.save(
+                        amenities_enabled=have_amenity
+                    )
+
                 else:
-                    space = Space.objects.create(
+                    space_serializer = SpaceSerializer(data=raw)
+                    space_serializer.is_valid(raise_exception=True)
+
+                    space = space_serializer.save(
                         venue=instance,
                         amenities_enabled=have_amenity,
-                        **raw
                     )
 
                 received_ids.add(space.id)
