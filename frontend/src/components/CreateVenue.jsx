@@ -470,12 +470,12 @@ export default function CreateVenue() {
 
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                     <label>
-                      <div>width (km)</div>
+                      <div>width (m)</div>
                       <input type="number" value={s.space_width} onChange={(e) => updateSpace(idx, { space_width: Number(e.target.value) })} style={{ width: 160, padding: 10 }} />
                     </label>
 
                     <label>
-                      <div>height (km)</div>
+                      <div>height (m)</div>
                       <input type="number" value={s.space_height} onChange={(e) => updateSpace(idx, { space_height: Number(e.target.value) })} style={{ width: 160, padding: 10 }} />
                     </label>
 

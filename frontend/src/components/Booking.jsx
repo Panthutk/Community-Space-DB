@@ -37,13 +37,13 @@ const addDays = (date, days) => {
 
 const setupInitialDates = () => {
     const todayThailand = getThailandDate();
-    
+
     // Tomorrow is the minimum booking date
     const tomorrow = addDays(todayThailand, 1);
-    
+
     // Maximum is tomorrow + 6 days (7 day window starting from tomorrow)
     const maxDate = addDays(tomorrow, 6);
-    
+
     return {
         minDate: formatDate(tomorrow),
         maxDate: formatDate(maxDate)
@@ -52,17 +52,17 @@ const setupInitialDates = () => {
 
 function getDisabledDates(reservations) {
     const disabledDates = new Set();
-    
+
     for (const res of reservations) {
         let current = createDateFromString(res.start);
         const end = createDateFromString(res.end);
-        
+
         while (current.getTime() <= end.getTime()) {
             disabledDates.add(formatDate(current));
             current = addDays(current, 1);
         }
     }
-    
+
     return disabledDates;
 }
 
@@ -102,29 +102,29 @@ export default function Booking() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const minDate = INITIAL_BOUNDS.minDate; 
-    const maxDate = INITIAL_BOUNDS.maxDate; 
+    const minDate = INITIAL_BOUNDS.minDate;
+    const maxDate = INITIAL_BOUNDS.maxDate;
 
     const [currentPage, setCurrentPage] = useState("booking");
     const [startDate, setStartDate] = useState(minDate);
     const [endDate, setEndDate] = useState(minDate); // Start with just tmr
 
     const disabledDates = useMemo(() => getDisabledDates(reservations), [reservations]);
-    const nextSevenDays = useMemo(() => getNextSevenDays(minDate), [minDate]); 
-    
+    const nextSevenDays = useMemo(() => getNextSevenDays(minDate), [minDate]);
+
     const validateDates = (startStr, endStr) => {
         if (!startStr || !endStr) return true;
-        
+
         let current = createDateFromString(startStr);
         const end = createDateFromString(endStr);
-        
+
         while (current.getTime() <= end.getTime()) {
             if (disabledDates.has(formatDate(current))) {
                 return false;
             }
             current = addDays(current, 1);
         }
-        
+
         return true;
     };
 
@@ -154,11 +154,11 @@ export default function Booking() {
             EndDate: endDate,
             totalCost: totalCost,
         };
-        
+
         try {
             const res = await fetch(`${API_BASE}/api/bookings/${spaceId}/confirm/`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
@@ -169,7 +169,7 @@ export default function Booking() {
             if (!res.ok) {
                 throw new Error(data?.detail || JSON.stringify(data) || "Booking failed.");
             }
-            
+
             setCurrentPage("confirmed");
 
         } catch (error) {
@@ -195,26 +195,26 @@ export default function Booking() {
                 });
                 if (!spaceRes.ok) throw new Error("Failed to fetch space data.");
                 const spaceData = await spaceRes.json();
-                
+
                 setBookingData({
                     SpaceName: spaceData.name,
                     SpaceDescription: spaceData.description,
-                    width: spaceData.space_width + 'km',
-                    height: spaceData.space_height + 'km',
+                    width: spaceData.space_width + 'm',
+                    height: spaceData.space_height + 'm',
                     PricePerDay: Number(spaceData.price_per_day),
                     CleaningFee: Number(spaceData.cleaning_fee || 0),
                     amenities: spaceData.amenities_enabled ? (Array.isArray(spaceData.amenities) ? spaceData.amenities : []) : [],
                 });
-                
+
                 const resRes = await fetch(`${API_BASE}/api/bookings/${spaceId}/reservations/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (!resRes.ok) throw new Error("Failed to fetch reservations.");
                 const resData = await resRes.json();
-                
+
                 console.log("Fetched reservations:", resData); // Debug log
                 setReservations(resData);
-                
+
             } catch (err) {
                 console.error("Fetch Data Error:", err);
                 setError("Failed to load booking data. Check network/server configuration.");
@@ -232,7 +232,7 @@ export default function Booking() {
     if (error) return <p style={{ textAlign: 'center', color: 'red', marginTop: '50px' }}>Error: {error}</p>;
 
     const dateOverlap = !validateDates(startDate, endDate);
-    
+
     const styles = {
         container: {
             minHeight: "100vh",
@@ -454,7 +454,7 @@ export default function Booking() {
             <div style={styles.container}>
                 <div style={styles.maxWidth}>
                     <h1 style={styles.title}>Booking</h1>
-                    
+
                     <div style={styles.gridContainer}>
                         <div style={styles.leftColumn}>
                             <div style={styles.card}>
@@ -463,33 +463,33 @@ export default function Booking() {
                                         <div style={styles.labelRed}>Space Name:</div>
                                         <div style={styles.value}>{bookingData.SpaceName}</div>
                                     </div>
-                                    
+
                                     <div>
                                         <div style={styles.label}>Space Description:</div>
                                         <div style={styles.value}>{bookingData.SpaceDescription}</div>
                                     </div>
-                                    
+
                                     <div style={styles.dimensionRow}>
                                         <div>
                                             <span style={styles.label}>width:</span>
-                                            <span style={{...styles.value, marginLeft: "12px"}}>{bookingData.width}</span>
+                                            <span style={{ ...styles.value, marginLeft: "12px" }}>{bookingData.width}</span>
                                         </div>
                                         <div>
                                             <span style={styles.label}>height:</span>
-                                            <span style={{...styles.value, marginLeft: "12px"}}>{bookingData.height}</span>
+                                            <span style={{ ...styles.value, marginLeft: "12px" }}>{bookingData.height}</span>
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <div style={styles.label}>price per day</div>
                                         <div style={styles.value}>${bookingData.PricePerDay}</div>
                                     </div>
-                                    
+
                                     <div>
                                         <div style={styles.label}>cleaning fee</div>
                                         <div style={styles.value}>${bookingData.CleaningFee}</div>
                                     </div>
-                                    
+
                                     {/* display amenities for this space.  If the list is empty,
                                         display 'None'. */}
                                     <div>
@@ -506,9 +506,9 @@ export default function Booking() {
                             </div>
 
                             <div style={styles.card}>
-                                <div style={{...styles.cardContent, position: 'relative', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start'}}>
-                                    
-                                    <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                                <div style={{ ...styles.cardContent, position: 'relative', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                         <div>
                                             <div style={styles.labelRed}>start date:</div>
                                             <input
@@ -530,7 +530,7 @@ export default function Booking() {
                                                 }}
                                             />
                                         </div>
-                                        
+
                                         <div>
                                             <div style={styles.labelRed}>end date:</div>
                                             <input
@@ -547,20 +547,20 @@ export default function Booking() {
                                                 }}
                                             />
                                         </div>
-                                         {dateOverlap && (
+                                        {dateOverlap && (
                                             <p style={{ color: 'red', fontWeight: 'bold', marginTop: '10px' }}>
-                                               ⚠️ Selected range includes already reserved dates.
+                                                ⚠️ Selected range includes already reserved dates.
                                             </p>
                                         )}
                                     </div>
-                                    
-                                    <div 
-                                        style={{ 
-                                            position: 'absolute', 
-                                            top: 0, 
-                                            right: 0, 
-                                            padding: '10px 0', 
-                                            maxWidth: 320, 
+
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            right: 0,
+                                            padding: '10px 0',
+                                            maxWidth: 320,
                                             textAlign: 'center'
                                         }}
                                     >
@@ -568,10 +568,10 @@ export default function Booking() {
                                         <div style={{ display: 'flex', gap: 5, justifyContent: 'flex-end' }}>
                                             {nextSevenDays.map((day, index) => {
                                                 const isAvailable = !disabledDates.has(day.dateStr);
-                                                const backgroundColor = isAvailable ? '#5cb85c' : '#d9534f'; 
+                                                const backgroundColor = isAvailable ? '#5cb85c' : '#d9534f';
                                                 const tooltipText = `${day.dateStr}: ${isAvailable ? 'Available' : 'Reserved'}`;
-                                                const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                                                
+                                                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
                                                 return (
                                                     <div
                                                         key={index}
@@ -604,10 +604,10 @@ export default function Booking() {
 
                         <div style={styles.rightColumn}>
                             <div style={styles.card}>
-                                <h2 style={{fontSize: "24px", fontWeight: "bold", textAlign: "center", marginBottom: "24px"}}>
+                                <h2 style={{ fontSize: "24px", fontWeight: "bold", textAlign: "center", marginBottom: "24px" }}>
                                     Total Cost
                                 </h2>
-                                
+
                                 <div>
                                     <div style={styles.costRow}>
                                         <span style={styles.costLabel}>start - end ({totalDays} {totalDays === 1 ? 'day' : 'days'})</span>
@@ -621,7 +621,7 @@ export default function Booking() {
                                         <span style={styles.costLabel}>amenity</span>
                                         <span style={styles.costValue}>Free</span>
                                     </div>
-                                    
+
                                     <div style={styles.divider}>
                                         <div style={styles.totalRow}>
                                             <span style={styles.totalLabel}>Total Price</span>
@@ -629,7 +629,7 @@ export default function Booking() {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <button
                                     style={{
                                         ...styles.button,
@@ -656,18 +656,18 @@ export default function Booking() {
             <div style={styles.qrContainer}>
                 <div style={styles.qrCard}>
                     <h2 style={styles.qrTitle}>Scan to Pay</h2>
-                    
+
                     <div style={styles.qrInfo}>
                         <p style={styles.qrPrice}>${totalCost}</p>
-                        <p style={{color: "#374151", fontWeight: "600"}}>{bookingData.SpaceName}</p>
-                        <p style={{color: "#6b7280", fontSize: "14px", marginTop: "8px"}}>
+                        <p style={{ color: "#374151", fontWeight: "600" }}>{bookingData.SpaceName}</p>
+                        <p style={{ color: "#6b7280", fontSize: "14px", marginTop: "8px" }}>
                             {startDate} to {endDate}
                         </p>
-                        <p style={{color: "#6b7280", fontSize: "14px"}}>
+                        <p style={{ color: "#6b7280", fontSize: "14px" }}>
                             ({totalDays} {totalDays === 1 ? 'day' : 'days'})
                         </p>
                     </div>
-                    
+
                     <div style={styles.qrImageContainer}>
                         <img
                             src={qrImage}
@@ -675,11 +675,11 @@ export default function Booking() {
                             style={styles.qrImage}
                         />
                     </div>
-                    
-                    <p style={{color: "#6b7280", marginBottom: "24px"}}>
+
+                    <p style={{ color: "#6b7280", marginBottom: "24px" }}>
                         Please scan the QR code to complete your payment
                     </p>
-                    
+
                     <button
                         style={styles.confirmButton}
                         onClick={handleConfirm}
@@ -688,7 +688,7 @@ export default function Booking() {
                     >
                         Confirm Payment
                     </button>
-                    
+
                     <button
                         style={styles.backButton}
                         onClick={() => setCurrentPage("booking")}
@@ -707,34 +707,34 @@ export default function Booking() {
             <div style={styles.qrContainer}>
                 <div style={styles.successCard}>
                     <div style={styles.checkmark}>✓</div>
-                    
+
                     <h2 style={styles.successTitle}>Payment Successful</h2>
-                    
+
                     <p style={styles.successMessage}>
                         Your booking has been confirmed. Thank you for your reservation!
                     </p>
-                    
+
                     <div style={styles.summaryBox}>
                         <p style={styles.summaryTitle}>Booking Summary</p>
                         <p style={styles.summaryItem}>
-                            <span style={{fontWeight: "600"}}>Space:</span> {bookingData.SpaceName}
+                            <span style={{ fontWeight: "600" }}>Space:</span> {bookingData.SpaceName}
                         </p>
                         <p style={styles.summaryItem}>
-                            <span style={{fontWeight: "600"}}>Check-in:</span> {startDate}
+                            <span style={{ fontWeight: "600" }}>Check-in:</span> {startDate}
                         </p>
                         <p style={styles.summaryItem}>
-                            <span style={{fontWeight: "600"}}>Check-out:</span> {endDate}
+                            <span style={{ fontWeight: "600" }}>Check-out:</span> {endDate}
                         </p>
                         <p style={styles.summaryItem}>
-                            <span style={{fontWeight: "600"}}>Duration:</span> {totalDays} {totalDays === 1 ? 'day' : 'days'}
+                            <span style={{ fontWeight: "600" }}>Duration:</span> {totalDays} {totalDays === 1 ? 'day' : 'days'}
                         </p>
-                        <div style={{borderTop: "2px solid #d1d5db", paddingTop: "8px", marginTop: "12px"}}>
-                            <p style={{fontSize: "16px", fontWeight: "bold"}}>
+                        <div style={{ borderTop: "2px solid #d1d5db", paddingTop: "8px", marginTop: "12px" }}>
+                            <p style={{ fontSize: "16px", fontWeight: "bold" }}>
                                 <span>Total Paid:</span> ${totalCost}
                             </p>
                         </div>
                     </div>
-                    
+
                     <button
                         style={styles.button}
                         onClick={() => {
