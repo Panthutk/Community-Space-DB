@@ -143,10 +143,6 @@ export default function Dashboard() {
               </p>
 
               <p>
-                  <b>Owner:</b> {" "} {ownerData[v.owner]?.name || "-"}
-              </p>
-
-              <p>
                 <b>Location:</b>{" "}
                 {[v.address, v.city, v.province, v.country]
                   .filter(Boolean)
@@ -159,8 +155,7 @@ export default function Dashboard() {
               </div>
 
               <p>
-                  <b>Created:</b>{" "}
-                  {new Date(v.created_at).toLocaleDateString("en-GB")}
+                  <b>Owner:</b> {" "} {ownerData[v.owner]?.name || "-"}
               </p>
 
               <p>
@@ -171,6 +166,11 @@ export default function Dashboard() {
                   <span style={{padding: "0 0 0 15px"}}>
                     <span style={{ fontWeight: 500 }}>Email:</span> {ownerData[v.owner]?.email || "-"}
                   </span>
+              </p>
+
+              <p>
+                  <b>Created:</b>{" "}
+                  {new Date(v.created_at).toLocaleDateString("en-GB")}
               </p>
 
             </div>
