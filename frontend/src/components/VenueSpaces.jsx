@@ -168,6 +168,13 @@ export default function VenueSpaces() {
                             <p>
                                 <b>Price/day:</b> ${s.price_per_day}
                             </p>
+
+                            {/* Display amenities*/}
+                            {s.amenities_enabled && (
+                                <p>
+                                    <b>Amenities:</b> {Array.isArray(s.amenities) && s.amenities.length > 0 ? s.amenities.join(", ") : "None"}
+                                </p>
+                            )}
                             
                             <div style={{ marginTop: 15, marginBottom: 15, padding: '10px 0' }}>
                                 <div style={{ fontWeight: 'bold', marginBottom: 5 }}>Available Dates For Reservation:</div>

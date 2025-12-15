@@ -96,7 +96,7 @@ export default function Booking() {
         height: "0m",
         PricePerDay: 0,
         CleaningFee: 0,
-        AmenityName: "Loading...",
+        amenities: [],
     });
     const [reservations, setReservations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -203,7 +203,7 @@ export default function Booking() {
                     height: spaceData.space_height + 'km',
                     PricePerDay: Number(spaceData.price_per_day),
                     CleaningFee: Number(spaceData.cleaning_fee || 0),
-                    AmenityName: spaceData.amenities_enabled ? "Enabled (List not fetched)" : "None",
+                    amenities: spaceData.amenities_enabled ? (Array.isArray(spaceData.amenities) ? spaceData.amenities : []) : [],
                 });
                 
                 const resRes = await fetch(`${API_BASE}/api/bookings/${spaceId}/reservations/`, {
@@ -490,9 +490,17 @@ export default function Booking() {
                                         <div style={styles.value}>${bookingData.CleaningFee}</div>
                                     </div>
                                     
+                                    {/* display amenities for this space.  If the list is empty,
+                                        display 'None'. */}
                                     <div>
-                                        <div style={styles.label}>amenity name:</div>
-                                        <div style={styles.value}>{bookingData.AmenityName}</div>
+                                        <div style={styles.label}>amenities:</div>
+                                        {Array.isArray(bookingData.amenities) && bookingData.amenities.length > 0 ? (
+                                            <div style={{ ...styles.value }}>
+                                                {bookingData.amenities.join(", ")}
+                                            </div>
+                                        ) : (
+                                            <div style={styles.value}>None</div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

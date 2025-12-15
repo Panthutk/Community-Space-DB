@@ -152,6 +152,7 @@ class VenueSerializer(serializers.ModelSerializer):
 
 class SpaceSerializer(serializers.ModelSerializer):
     venue = serializers.PrimaryKeyRelatedField(read_only=True)
+    amenities = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Space
@@ -166,6 +167,7 @@ class SpaceSerializer(serializers.ModelSerializer):
             "cleaning_fee",
             "is_published",
             "amenities_enabled",
+            "amenities",
             "created_at",
             "updated_at",
         ]
@@ -209,6 +211,19 @@ class SpaceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
+    
+    def get_amenities(self, obj):
+        """
+        Return a list of amenity names for this space.
+        If amenities are disabled, return an empty list.
+        """
+        if not getattr(obj, "amenities_enabled", False):
+            return []
+        return list(
+            SpaceAmenity.objects.filter(space=obj)
+            .select_related("amenity")
+            .values_list("amenity__name", flat=True)
+        )
 
 
 # =========================================================

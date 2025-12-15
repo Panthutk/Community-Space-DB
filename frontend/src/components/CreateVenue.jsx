@@ -248,7 +248,7 @@ export default function CreateVenue() {
             cleaning_fee: s.cleaning_fee,
             is_published: s.is_published,
             have_amenity: s.amenities_enabled,
-            amenities: [],
+            amenities: Array.isArray(s.amenities) ? [...s.amenities] : [],
             amenity_input: "",
           }))
         );
